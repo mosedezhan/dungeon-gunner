@@ -1,62 +1,62 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+本文件为 Claude Code (claude.ai/code) 在此仓库中工作时提供指引。
 
-## Running the Game
+## 运行游戏
 
-No build step. Phaser 3 is loaded via CDN in `index.html`. Requires a local static server (ES modules won't work from `file://`):
+无构建步骤。Phaser 3 通过 `index.html` 中的 CDN 加载。需要本地静态服务器（ES 模块无法从 `file://` 协议加载）：
 
 ```bash
 python -m http.server 8000
-# Open http://localhost:8000
+# 打开 http://localhost:8000
 ```
 
-Or use VS Code Live Server extension.
+也可使用 VS Code 的 Live Server 扩展。
 
-There are no tests, no linter, and no bundler. All changes are verified by browser testing.
+项目没有测试框架、没有代码检查工具、没有打包器。所有改动通过浏览器手动验证。
 
-## Architecture
+## 架构
 
-**Phaser 3 game with ES module structure.** All source is in `src/`, loaded as native ES modules from `index.html`.
+**基于 Phaser 3 的 ES 模块结构游戏。** 所有源码在 `src/` 目录下，以原生 ES 模块形式从 `index.html` 加载。
 
-### Scene Flow (registered in order in `main.js`)
+### 场景流转（在 `main.js` 中按顺序注册）
 
 ```
-BootScene → MenuScene → GameScene (parallel: HUDScene)
-                          ├─ PauseScene (overlay, pauses GameScene)
-                          ├─ UpgradeScene (overlay, pauses GameScene on level-up)
-                          └─ GameOverScene (replaces all on death)
+BootScene → MenuScene → GameScene（并行运行：HUDScene）
+                          ├─ PauseScene（叠加层，暂停 GameScene）
+                          ├─ UpgradeScene（叠加层，升级时暂停 GameScene）
+                          └─ GameOverScene（死亡时替换所有场景）
 ```
 
-- **BootScene** — Generates ALL textures and animations procedurally via `Graphics.generateTexture()`. No external sprite assets. Every character/enemy/effect is defined as a pixel grid constant painted to a texture. All Phaser animation keys are created here.
-- **GameScene** — Main game loop. Owns all physics groups (`bullets`, `enemyBullets`, `xpOrbs`, `enemies`), the `Player` instance, and the `WaveManager`. All overlap/collision callbacks live here. Calls `scene.launch('HUDScene')` which runs in parallel.
-- **HUDScene** — Reads state directly from `this.scene.get('GameScene')` each frame. Has `showBanner(text)` method called by GameScene for wave transitions (deferred on first wave since launch is async).
-- **UpgradeScene** — Receives `{ remaining }` data. Pauses GameScene, shows 3 random upgrade cards. Picks apply functions directly to `Player.stats`.
-- **PauseScene** — Pauses GameScene, resume with ESC/P, quit-to-menu with Q.
-- **GameOverScene** — Receives `{ wave, level, kills }` from GameScene via `scene.start()`.
+- **BootScene** — 通过 `Graphics.generateTexture()` 程序化生成所有纹理和动画。无外部精灵图资源。每个角色/敌人/特效都定义为像素网格常量，绘制到纹理上。所有 Phaser 动画 key 在此处创建。
+- **GameScene** — 主游戏循环。拥有所有物理组（`bullets`、`enemyBullets`、`xpOrbs`、`enemies`）、`Player` 实例和 `WaveManager`。所有碰撞/重叠回调在此处理。通过 `scene.launch('HUDScene')` 并行启动 HUD。
+- **HUDScene** — 每帧通过 `this.scene.get('GameScene')` 直接读取游戏状态。提供 `showBanner(text)` 方法供 GameScene 在波次切换时调用（首波因 launch 异步需要延迟调用）。
+- **UpgradeScene** — 接收 `{ remaining }` 数据。暂停 GameScene，展示 3 张随机升级卡片。选中的升级通过 `apply` 函数直接修改 `Player.stats`。
+- **PauseScene** — 暂停 GameScene，按 ESC/P 恢复，按 Q 返回主菜单。
+- **GameOverScene** — 通过 `scene.start()` 从 GameScene 接收 `{ wave, level, kills }` 数据。
 
-### Entity Pattern
+### 实体模式
 
-Entities extend `Phaser.Physics.Arcade.Sprite` and self-register via `scene.add.existing(this)` + `scene.physics.add.existing(this)`. They are pooled via `scene.physics.add.group({ classType, maxSize })`.
+实体继承 `Phaser.Physics.Arcade.Sprite`，通过 `scene.add.existing(this)` + `scene.physics.add.existing(this)` 自注册。通过 `scene.physics.add.group({ classType, maxSize })` 进行对象池化。
 
-- **Player** — Holds `stats` object (mutable copy of `PLAYER` config). Gun is a separate sprite that rotates with mouse. `muzzle` is a `Vector2` updated each frame for bullet spawn point. Supports invulnerability frames, regen accumulation.
-- **Enemy** (base) — Subclassed by `Chaser`, `Rusher`, `Shooter`. Each reads behavior from `ENEMY` config block. Enemies use `preUpdate` for AI (chase/strafe/shoot). `Shooter` uses `enemyBullets` group from scene.
-- **Bullet / EnemyBullet** — Fire-and-forget projectiles with lifetime and offscreen culling. Player bullets track `hitSet` for pierce (hit same enemy only once).
-- **XPOrb** — Pulses via tween, attracted to player within `XP.pickupRadius`.
+- **Player** — 持有 `stats` 对象（`PLAYER` 配置的可变副本）。枪是独立的精灵，跟随鼠标旋转。`muzzle` 是每帧更新的 `Vector2`，作为子弹生成点。支持无敌帧和生命回复累积。
+- **Enemy**（基类）— 由 `Chaser`、`Rusher`、`Shooter` 继承。各自从 `ENEMY` 配置块读取行为参数。敌人在 `preUpdate` 中执行 AI（追踪/走位/射击）。`Shooter` 使用场景的 `enemyBullets` 组发射子弹。
+- **Bullet / EnemyBullet** — 发射后自动飞行的弹丸，有生命周期和出界回收。玩家子弹通过 `hitSet` 追踪穿透（同一敌人只命中一次）。
+- **XPOrb** — 通过缓动实现脉冲动画，在 `XP.pickupRadius` 半径内被玩家吸引。
 
-### Config (`src/config.js`)
+### 配置文件 (`src/config.js`)
 
-Single source of truth for all tunables: player stats, enemy definitions, wave timing, XP curve, upgrade definitions. The `UPGRADES` array contains `apply(p)` functions that mutate `Player.stats` directly. When tuning game balance, edit this file only.
+所有可调参数的唯一来源：玩家属性、敌人定义、波次时间、XP 曲线、升级定义。`UPGRADES` 数组包含 `apply(p)` 函数，直接修改 `Player.stats`。调整游戏平衡时只需修改此文件。
 
-### Key Conventions
+### 关键约定
 
-- **No external assets required.** All sprites are procedural pixel art in BootScene. Texture keys are hardcoded strings referenced across scenes/entities.
-- **Scene communication** uses Phaser's scene manager (`scene.get()`, `scene.pause()`, `scene.launch()`, `scene.start()` with data). No event bus.
-- **`GameScene.handleEnemyDeath()`** is called by `Enemy.die()` via scene reference — this is the hook for spawning XP orbs and tracking kills.
-- **Physics groups** use `runChildUpdate: true` so pooled entities get their `preUpdate` called automatically when active.
+- **无需外部资源。** 所有精灵都是 BootScene 中程序化生成的像素艺术。纹理 key 是硬编码字符串，在场景/实体间交叉引用。
+- **场景通信** 使用 Phaser 场景管理器（`scene.get()`、`scene.pause()`、`scene.launch()`、带数据的 `scene.start()`）。不使用事件总线。
+- **`GameScene.handleEnemyDeath()`** 由 `Enemy.die()` 通过场景引用调用 — 这是生成 XP 球和追踪击杀数的钩子。
+- **物理组** 使用 `runChildUpdate: true`，使池化实体在激活时自动调用 `preUpdate`。
 
-## Git & GitHub
+## Git 与 GitHub
 
-- Remote: `https://github.com/mosedezhan/dungeon-gunner`
-- Commit style: `feat:`, `fix:`, `refactor:` conventional prefixes
-- Push after each meaningful change
+- 远程仓库：`https://github.com/mosedezhan/dungeon-gunner`
+- 提交风格：使用 `feat:`、`fix:`、`refactor:` 约定式前缀
+- 每次有意义的改动后推送
