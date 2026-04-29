@@ -25,13 +25,13 @@
 
 ## 5. 验证与归档
 
-- [ ] 5.1 在浏览器启动游戏（`python -m http.server 8000` → http://localhost:8000），确认零代码改动未影响运行
+- [x] 5.1 在浏览器启动游戏（`python -m http.server 8000` → http://localhost:8000），确认零代码改动未影响运行
 - [x] 5.2 在新会话中模拟 `/onboard` 流程（手动执行命令所定义的读取序列），确认产出符合预期
 - [x] 5.3 检查所有新增文件路径与 proposal Impact 节列出的文件清单一致
 - [x] 5.4 运行 `openspec validate add-ai-workflow-foundation --strict`（如可用）；若 CLI 无 validate 命令，至少运行 `openspec status --change add-ai-workflow-foundation --json` 确认无未完成 artifacts
-- [ ] 5.5 提交 git commit，message 使用 `feat:` 前缀，引用本 change 名称
-- [ ] 5.6 执行 `/opsx:archive add-ai-workflow-foundation`，归档本变更
-- [ ] 5.7 确认归档后 `openspec/specs/ai-workflow-foundation/spec.md` 已生成，`openspec/changes/add-ai-workflow-foundation/` 已移入 archive
+- [x] 5.5 提交 git commit，message 使用 `feat:` 前缀，引用本 change 名称
+- [x] 5.6 执行 `/opsx:archive add-ai-workflow-foundation`，归档本变更
+- [x] 5.7 确认归档后 `openspec/specs/ai-workflow-foundation/spec.md` 已生成，`openspec/changes/add-ai-workflow-foundation/` 已移入 archive
 
 ## 6. Scope Refine：规则与决策叙事分离（apply 阶段识别）
 
