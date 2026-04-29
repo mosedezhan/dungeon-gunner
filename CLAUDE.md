@@ -60,3 +60,9 @@ BootScene → MenuScene → GameScene（并行运行：HUDScene）
 - 远程仓库：`https://github.com/mosedezhan/dungeon-gunner`
 - 提交风格：使用 `feat:`、`fix:`、`refactor:` 约定式前缀
 - 每次有意义的改动后推送
+
+## AI 工作流规则
+
+本项目工作流硬规则见 `docs/ai-workflow/RULES.md`，开始任何变更前必须遵守（颗粒度策略、archive 即时性、进行中变更上限等）。
+决策叙事见 `docs/ai-workflow/NN-*.md`（ADR 风格），记录"为什么这么做"。
+新会话推荐先跑 `/onboard` 加载项目状态。

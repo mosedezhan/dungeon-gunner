@@ -1,0 +1,37 @@
+# entities/ — 局部规则
+
+根 `CLAUDE.md` 已说明实体继承结构。本文件只列写代码时的局部约定。
+
+## 自注册与对象池
+
+- **构造函数三件套**：`scene.add.existing(this)` + `scene.physics.add.existing(this)` + 设置 `setScale` / `setDepth`。缺一会出现"绘出来但没物理"或反之。
+- **物理体形状**优先 `body.setCircle(radius, offsetX, offsetY)`，offset 让圆心对准精灵中心：`width/2 - radius`。
+- **池化复用**通过 `scene.<group>.get(x, y)` 返回非活跃实例。**复活** Sprite 用 `enableBody(true, x, y, true, true)` + `setActive` + `setVisible` + `setPosition` + 重置内部状态（`hitSet.clear()`、`hp = maxHp` 等）。
+- **kill** 一律 `this.disableBody(true, true)`，不要 `destroy()`，否则池失效。`destroy()` 仅在死亡动画结束的 `onComplete` 调用。
+
+## preUpdate 中写 AI
+
+- 池化实体（Bullet / Enemy 子类 / XPOrb）的 AI 写在 `preUpdate(time, delta)` 中，物理组用 `runChildUpdate: true` 自动调用。
+- **第一行必须** `super.preUpdate(time, delta)`，否则动画/物理插值挂掉。
+- **第二行 guard**：`if (!this.active) return;` 或 `if (this.dead) return;`。失活实例仍在内存里，preUpdate 仍会调。
+- 出界回收：camera worldView ± margin 判断后 `this.kill()`（参考 `Bullet.preUpdate`）。
+
+## Enemy 子类约定
+
+- 继承 `Enemy`，构造函数传 `(scene, x, y, textureKey, ENEMY.<type>)`。配置必须从 `config.js` 的 `ENEMY` 块读取，不硬编码数值。
+- `cfg` 在基类挂为 `this.cfg`，子类直接读 `this.cfg.speed` 等。
+- 死亡钩子 `Enemy.die()` 调 `scene.handleEnemyDeath?.(this)` — 这是 GameScene 触发 XP 球生成与击杀计数的唯一入口，新增子类无需重写。
+
+## Player 特殊性
+
+- Player 不在物理组里，单实例，stats 是 `PLAYER` 配置的可变副本（升级会直接改 `this.stats`）。
+- `muzzle` 是 `Vector2`，每帧由枪精灵旋转更新，作为子弹生成点 — 修改枪逻辑时不要忘了更新 muzzle。
+- 无敌帧用时间戳 `invulUntil`，不是布尔。
+
+## 新增实体的 checklist
+
+1. 继承合适基类（多数情况是 `Phaser.Physics.Arcade.Sprite` 或 `Enemy`）
+2. 构造函数三件套
+3. 决定是否池化：池化加进 `GameScene.create()` 的 group + 实现 `kill()` / 复活逻辑
+4. `preUpdate` 加 super + active guard
+5. 在 `BootScene` 程序化生成纹理 + 注册动画 key
