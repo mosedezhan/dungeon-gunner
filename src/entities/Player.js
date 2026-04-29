@@ -23,6 +23,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.lastShotAt = -9999;
     this.regenAccum = 0;
     this.dead = false;
+    this.skillCharges = 0;
 
     this.gun = scene.add.sprite(x, y, 'gun').setOrigin(0.15, 0.5).setDepth(11).setScale(2);
     this.muzzle = new Phaser.Math.Vector2();
@@ -138,5 +139,18 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       alpha: 0, scale: 0.5, angle: 90, duration: 600, ease: 'Cubic.easeIn',
       onComplete: () => this.scene.onPlayerDead?.(),
     });
+  }
+
+  triggerSkill() {
+    if (this.dead || this.skillCharges <= 0) return false;
+    this.skillCharges -= 1;
+    this.scene.fireShockwave?.(this.x, this.y);
+    return true;
+  }
+
+  gainSkillCharge(n = 1) {
+    const before = this.skillCharges;
+    this.skillCharges = Math.min(this.stats.skillChargesMax, this.skillCharges + n);
+    return this.skillCharges > before;
   }
 }

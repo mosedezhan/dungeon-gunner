@@ -244,6 +244,24 @@ export class BootScene extends Phaser.Scene {
     orb.generateTexture('xp', 10, 10);
     orb.destroy();
 
+    // Skill orb: warm orange/red, distinct from XP cyan
+    const sorb = this.add.graphics().setVisible(false);
+    sorb.fillStyle(0xff8a22, 0.9); sorb.fillCircle(5, 5, 5);
+    sorb.fillStyle(0xffcc44, 1);   sorb.fillCircle(5, 5, 4);
+    sorb.fillStyle(0xff3322, 1);   sorb.fillCircle(5, 5, 2);
+    sorb.fillStyle(0xffffff, 1);   sorb.fillCircle(4, 4, 1);
+    sorb.generateTexture('skill_orb', 10, 10);
+    sorb.destroy();
+
+    // Shockwave ring: transparent center, bright outer rim, faint inner halo
+    const shock = this.add.graphics().setVisible(false);
+    shock.fillStyle(0x66bbff, 0.18); shock.fillCircle(32, 32, 30);
+    shock.lineStyle(3, 0xffffff, 1.0);  shock.strokeCircle(32, 32, 28);
+    shock.lineStyle(2, 0x88ddff, 0.85); shock.strokeCircle(32, 32, 25);
+    shock.lineStyle(1, 0xffffff, 0.5);  shock.strokeCircle(32, 32, 22);
+    shock.generateTexture('shockwave', 64, 64);
+    shock.destroy();
+
     // Create animations
     this.anims.create({
       key: 'player_idle',

@@ -12,6 +12,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.body.setCircle(cfg.radius, this.width / 2 - cfg.radius, this.height / 2 - cfg.radius);
     this.body.setDamping(true).setDrag(0.0005);
     this.contactCooldown = 0;
+    this.knockUntil = 0;
   }
 
   takeDamage(amount) {
@@ -22,9 +23,10 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     if (this.hp <= 0) this.die();
   }
 
-  knockback(fromX, fromY, power = 180) {
+  knockback(fromX, fromY, power = 180, durationMs = 220) {
     const a = Math.atan2(this.y - fromY, this.x - fromX);
     this.setVelocity(Math.cos(a) * power, Math.sin(a) * power);
+    this.knockUntil = this.scene.time.now + durationMs;
   }
 
   die() {

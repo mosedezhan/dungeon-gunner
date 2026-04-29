@@ -71,6 +71,6 @@ export class HUDScene extends Phaser.Scene {
 
     const dmg = Math.round(p.stats.damage);
     const rate = (1000 / p.stats.fireRateMs).toFixed(1);
-    this.statsText.setText(`kills ${gs.kills}\ndmg ${dmg}   ${rate}/s\npierce ${p.stats.pierce}   x${p.stats.multishot}`);
+    this.statsText.setText(`kills ${gs.kills}\ndmg ${dmg}   ${rate}/s\npierce ${p.stats.pierce}   x${p.stats.multishot}\nskill ${p.skillCharges}/${p.stats.skillChargesMax}`);
   }
 }

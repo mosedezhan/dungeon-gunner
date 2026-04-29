@@ -10,6 +10,7 @@ export class Chaser extends Enemy {
   preUpdate(time, delta) {
     super.preUpdate(time, delta);
     if (this.dead) return;
+    if (time < this.knockUntil) return;
     const p = this.scene.player;
     if (!p || p.dead) { this.setVelocity(0, 0); return; }
     const a = Math.atan2(p.y - this.y, p.x - this.x);

@@ -16,12 +16,18 @@ export class Shooter extends Enemy {
 
     const dist = Phaser.Math.Distance.Between(this.x, this.y, p.x, p.y);
     const a = Math.atan2(p.y - this.y, p.x - this.x);
-    const pref = this.cfg.preferredRange;
-    let move = 0;
-    if (dist > pref + 30) move = 1;
-    else if (dist < pref - 40) move = -0.5;
-    this.setVelocity(Math.cos(a) * this.cfg.speed * move, Math.sin(a) * this.cfg.speed * move);
-    this.flipX = Math.cos(a) < 0;
+
+    if (time < this.knockUntil) {
+      // 仍在硬直，不抢速度但保留瞄准/射击节奏
+      this.flipX = Math.cos(a) < 0;
+    } else {
+      const pref = this.cfg.preferredRange;
+      let move = 0;
+      if (dist > pref + 30) move = 1;
+      else if (dist < pref - 40) move = -0.5;
+      this.setVelocity(Math.cos(a) * this.cfg.speed * move, Math.sin(a) * this.cfg.speed * move);
+      this.flipX = Math.cos(a) < 0;
+    }
 
     if (time - this.lastShotAt >= this.cfg.fireRateMs && dist < pref + 120) {
       this.lastShotAt = time;

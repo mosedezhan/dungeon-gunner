@@ -1,8 +1,9 @@
-import { GAME } from '../config.js';
+import { GAME, SKILL } from '../config.js';
 import { Player } from '../entities/Player.js';
 import { Bullet } from '../entities/Bullet.js';
 import { EnemyBullet } from '../entities/EnemyBullet.js';
 import { XPOrb } from '../entities/XPOrb.js';
+import { SkillOrb } from '../entities/SkillOrb.js';
 import { WaveManager } from '../systems/WaveManager.js';
 
 export class GameScene extends Phaser.Scene {
@@ -17,18 +18,24 @@ export class GameScene extends Phaser.Scene {
     this.bullets      = this.physics.add.group({ classType: Bullet,      runChildUpdate: true, maxSize: 200 });
     this.enemyBullets = this.physics.add.group({ classType: EnemyBullet, runChildUpdate: true, maxSize: 200 });
     this.xpOrbs       = this.physics.add.group({ classType: XPOrb,       runChildUpdate: true, maxSize: 400 });
+    this.skillOrbs    = this.physics.add.group({ classType: SkillOrb,    runChildUpdate: true, maxSize: 100 });
     this.enemies      = this.physics.add.group();
 
     this.physics.add.overlap(this.bullets, this.enemies, this.onBulletHitEnemy, null, this);
     this.physics.add.overlap(this.player, this.enemies, this.onPlayerTouchEnemy, null, this);
     this.physics.add.overlap(this.player, this.enemyBullets, this.onPlayerHitByEnemyBullet, null, this);
     this.physics.add.overlap(this.player, this.xpOrbs, this.onPickupXP, null, this);
+    this.physics.add.overlap(this.player, this.skillOrbs, this.onPickupSkillOrb, null, this);
 
     this.kills = 0;
     this.waveManager = new WaveManager(this);
 
     this.input.keyboard.on('keydown-ESC', () => this.pauseGame());
     this.input.keyboard.on('keydown-P',   () => this.pauseGame());
+    this.input.keyboard.on('keydown-Q',   () => {
+      if (!this.scene.isActive() || this.player.dead) return;
+      this.player.triggerSkill();
+    });
 
     this.scene.launch('HUDScene');
   }
@@ -109,10 +116,46 @@ export class GameScene extends Phaser.Scene {
     if (leveled.length > 0) this.triggerLevelUp(leveled.length);
   }
 
+  onPickupSkillOrb(player, orb) {
+    if (!orb.active || player.dead) return;
+    orb.kill();
+    player.gainSkillCharge(1);
+  }
+
   handleEnemyDeath(enemy) {
     this.kills += 1;
     const orb = this.xpOrbs.get(enemy.x, enemy.y);
     if (orb) orb.spawn(enemy.x, enemy.y, enemy.cfg.xp);
+    if (Math.random() < SKILL.dropChance) {
+      const so = this.skillOrbs.get(enemy.x, enemy.y);
+      if (so) so.spawn(enemy.x, enemy.y);
+    }
+  }
+
+  fireShockwave(x, y) {
+    this.enemyBullets.getChildren().forEach(b => { if (b.active) b.kill(); });
+    this.enemies.getChildren().forEach(e => {
+      if (e.dead) return;
+      const d = Phaser.Math.Distance.Between(x, y, e.x, e.y);
+      if (d < SKILL.knockbackRadius) e.knockback(x, y, SKILL.knockbackForce);
+    });
+    this._spawnShockwaveVfx(x, y);
+    this.cameras.main.shake(120, 0.004);
+  }
+
+  _spawnShockwaveVfx(x, y) {
+    const ring = this.add.image(x, y, 'shockwave')
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(20)
+      .setScale(0.2);
+    this.tweens.add({
+      targets: ring,
+      scale: SKILL.vfxMaxScale,
+      alpha: 0,
+      duration: SKILL.vfxDurationMs,
+      ease: 'Cubic.easeOut',
+      onComplete: () => ring.destroy(),
+    });
   }
 
   onWaveStart(n) {
