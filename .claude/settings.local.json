@@ -16,7 +16,8 @@
       "Bash(openspec validate *)",
       "Bash(openspec --help)",
       "Bash(git commit -m ' *)",
-      "Bash(openspec archive *)"
+      "Bash(openspec archive *)",
+      "Bash(openspec list *)"
     ]
   }
 }

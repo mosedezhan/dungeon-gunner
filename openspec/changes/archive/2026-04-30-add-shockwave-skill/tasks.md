@@ -35,7 +35,7 @@
 ## 6. HUDScene
 
 - [x] 6.1 在 `HUDScene.update` 的 `statsText.setText(...)` 模板中追加一行 `skill ${p.skillCharges}/${p.stats.skillChargesMax}`
-- [ ] 6.2 验证 HUD 在升级抽到 `skillmax` 后立即反映新上限（无需新增代码，仅在手测中确认）
+- [x] 6.2 验证 HUD 在升级抽到 `skillmax` 后立即反映新上限（无需新增代码，仅在手测中确认）
 
 ## 8. Knockback Stun Window (Playtest Fix)
 
@@ -48,12 +48,12 @@
 
 ## 7. Manual Verification (Browser)
 
-- [ ] 7.1 启动本地服务（`python -m http.server 8000`），打开 `http://localhost:8000`
-- [ ] 7.2 启动游戏后 HUD 显示 `skill 0/1`；按 Q 无任何反应（无消耗、无 VFX）
-- [ ] 7.3 临时把 `SKILL.dropChance` 调到 `1.0` 验证：每个敌人死亡都掉 SkillOrb；颜色与 XP 球明显不同；走近后被吸附，碰到后 HUD 变为 `skill 1/1`
-- [ ] 7.4 满充能时再吃一个 SkillOrb：HUD 仍显示 `skill 1/1`，球被消耗（不在地上堆积）
-- [ ] 7.5 按 Q：屏幕上所有敌方子弹消失；玩家附近敌人被向外推开；中心冒出环形冲击波动画并淡出；HUD 回到 `skill 0/1`
-- [ ] 7.6 升级抽到 `Resonance Core`：HUD 立即变为 `skill 1/2`（max+1，当前+1）
-- [ ] 7.7 暂停场景下按 Q：无效果；游戏结束后按 Q：无效果
-- [ ] 7.8 把 `SKILL.dropChance` 改回平衡值（建议 0.05），刷一波确认掉率体感合理
-- [ ] 7.9 死亡 + 重开：`skillCharges` 回到 0，`skillChargesMax` 回到 1（验证不残留状态）
+- [x] 7.1 启动本地服务（`python -m http.server 8000`），打开 `http://localhost:8000`
+- [x] 7.2 启动游戏后 HUD 显示 `skill 0/1`；按 Q 无任何反应（无消耗、无 VFX）
+- [x] 7.3 临时把 `SKILL.dropChance` 调到 `1.0` 验证：每个敌人死亡都掉 SkillOrb；颜色与 XP 球明显不同；走近后被吸附，碰到后 HUD 变为 `skill 1/1`
+- [x] 7.4 满充能时再吃一个 SkillOrb：HUD 仍显示 `skill 1/1`，球被消耗（不在地上堆积）
+- [x] 7.5 按 Q：屏幕上所有敌方子弹消失；玩家附近敌人被向外推开；中心冒出环形冲击波动画并淡出；HUD 回到 `skill 0/1`
+- [x] 7.6 升级抽到 `Resonance Core`：HUD 立即变为 `skill 1/2`（max+1，当前+1）
+- [x] 7.7 暂停场景下按 Q：无效果；游戏结束后按 Q：无效果
+- [x] 7.8 把 `SKILL.dropChance` 改回平衡值（建议 0.05），刷一波确认掉率体感合理
+- [x] 7.9 死亡 + 重开：`skillCharges` 回到 0，`skillChargesMax` 回到 1（验证不残留状态）

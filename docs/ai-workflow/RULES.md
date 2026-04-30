@@ -24,7 +24,8 @@
 1. **archive 即时性**：change 实现完成 + playtest 通过 → 立即归档。已完成未归档 = 上下文负债。
 2. **进行中变更上限**：`openspec/changes/` 下未归档 change **≤ 2 个**。达上限必须先归档或显式暂停一个，不得简单累加。
 3. **CLAUDE.md 分层加载**：根 CLAUDE.md 只放全局架构 + 工作流指针。子系统局部规则下沉到 `src/<subdir>/CLAUDE.md`。新增分层须留 ADR。
-4. **决策记录可追溯**：每引入一个新 AI 框架元素（命令 / 分层 / 工作流 / 约定），必须在 `docs/ai-workflow/` 留 `NN-name.md` ADR。
+4. **CLAUDE.md 归档同步**：归档变更时若引入新场景 / 新 Entity 类 / 新顶层 `config.js` 块 / 新跨文件约定，必须更新对应 CLAUDE.md 小节。bug 修复 / 平衡微调 / 单卡 / 单敌人变体不进。判断标准：**未来新会话不读它就上不了手，才进**。`/opsx:archive` 自动跑这一步（见下方"archive 执行步骤"），但人工归档仍需手动遵守。
+5. **决策记录可追溯**：每引入一个新 AI 框架元素（命令 / 分层 / 工作流 / 约定），必须在 `docs/ai-workflow/` 留 `NN-name.md` ADR。
 
 ## archive 执行步骤
 
@@ -33,8 +34,11 @@
 2. 浏览器手测通过（参考 /playtest 输出 checklist）
 3. git commit 用 feat: / fix: / refactor: 前缀
 4. /opsx:archive <change-name>
-5. 确认 openspec/specs/ 下新增/更新 capability，changes/ 原目录已移入 archive/
+5. 命令会自动评估 CLAUDE.md 是否需要同步：若变更引入新场景 / 新 Entity / 新顶层 config 块 / 新跨文件约定，会输出 diff 让你确认
+6. 确认 openspec/specs/ 下新增/更新 capability，changes/ 原目录已移入 archive/，CLAUDE.md 已按需更新
 ```
+
+详细判断标准见 ADR `01-claude-md-sync-on-archive.md`。
 
 ## 决策记录命名
 

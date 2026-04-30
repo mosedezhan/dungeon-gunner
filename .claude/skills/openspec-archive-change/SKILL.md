@@ -82,6 +82,27 @@ Archive a completed change in the experimental workflow.
    mv openspec/changes/<name> openspec/changes/archive/YYYY-MM-DD-<name>
    ```
 
+5.5. **Propose CLAUDE.md sync (project context refresh)**
+
+   After the archive move succeeds, evaluate whether the archived change introduced any project-level facts that future Claude sessions need to know without having to read the archive directory. If yes, propose an edit to the root `CLAUDE.md` (or the nearest subsystem `src/<dir>/CLAUDE.md`).
+
+   **Promotion-worthy** (eligible for CLAUDE.md):
+   - 新场景 / 新 Entity 类 / 新物理组 → 「场景流转」or「实体模式」
+   - 新顶层 `config.js` 块（如 `SKILL`、`SHOP`） → 「配置文件」
+   - 新跨文件约定 / 新场景间通信钩子 → 「关键约定」
+
+   **Skip** (do NOT promote):
+   - bug 修复 / refactor / 平衡数值微调
+   - 单个新升级卡 / 单个新敌人变体（除非引入新机制类别）
+   - 实现细节 / 任务列表 / ADR 决策（archive 目录已经保留）
+
+   **判断标准：未来新会话不读它就上不了手，才进 CLAUDE.md。**
+
+   If nothing qualifies: report "CLAUDE.md sync: nothing to promote".
+   If something qualifies: output a proposed diff and use **AskUserQuestion** to confirm ("Apply" / "Skip" / "Edit and apply") before writing via Edit tool.
+
+   This step MUST NOT block or roll back the archive — failures here are warnings only.
+
 6. **Display summary**
 
    Show archive completion summary including:
@@ -89,6 +110,7 @@ Archive a completed change in the experimental workflow.
    - Schema that was used
    - Archive location
    - Whether specs were synced (if applicable)
+   - CLAUDE.md sync status (updated / nothing to promote / skipped)
    - Note about any warnings (incomplete artifacts/tasks)
 
 **Output On Success**

@@ -14,7 +14,7 @@ export const PLAYER = {
   multishot: 1,
   regen: 0,
   invulnMs: 400,
-  skillChargesMax: 10,
+  skillChargesMax: 1,
 };
 
 export const BULLET = {
@@ -41,7 +41,7 @@ export const XP = {
 export const SKILL = {
   pickupRadius: 110,
   magnetSpeed: 320,
-  dropChance: 1,
+  dropChance: 0.1,
   knockbackRadius: 120,
   knockbackForce: 480,
   vfxMaxScale: 8,
