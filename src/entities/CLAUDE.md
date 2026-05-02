@@ -35,3 +35,21 @@
 3. 决定是否池化：池化加进 `GameScene.create()` 的 group + 实现 `kill()` / 复活逻辑
 4. `preUpdate` 加 super + active guard
 5. 在 `BootScene` 程序化生成纹理 + 注册动画 key
+6. **双人协作模式下**：先开 OpenSpec change 固定 `id / texture_keys / anim_keys / config_block`（见下节）
+
+## Enemy 子类的命名空间约定（双人协作）
+
+> 背景与原因见 `docs/ai-workflow/03-collaboration-rules.md` §1。
+
+新敌人 / 精英 / Boss 必须先开 OpenSpec change，proposal 中固定四个字段：
+
+| 字段 | 例 | 强约束 |
+|---|---|---|
+| `id` | `heavy` | kebab-case；全局唯一（含已归档 change） |
+| `texture_keys` | `[heavy_a, heavy_b]` | 前缀必须等于 `id` |
+| `anim_keys` | `[heavy_walk, heavy_die]` | 前缀必须等于 `id` |
+| `config_block` | `ENEMY.heavy` | 块名等于 `id`（驼峰例外须在 spec 里显式说明） |
+
+Phaser 的 texture / animation key 是全局字符串命名空间，同名后写**静默覆盖**前写——单人不痛，双人撞一次的调试成本极高。`id` 前缀对齐是把这条隐性风险变成 review 时一眼可查的显性规则。
+
+未走 spec 的散件 PR 不合并；散件 commit 在归档其他 change 时被 `/opsx:archive` 检测到属于"无 spec 接入新内容"，会反对归档。

@@ -26,3 +26,17 @@
 2. 决定模式：硬切（`scene.start`）/ 叠加（`launch` + `pause`）/ 后台（`launch` 不 pause）
 3. 如果是叠加，在 `GameScene.pauseGame()` 加 guard 防互冲
 4. 数据传递用 `create(data)`，不要用全局/单例
+5. **双人协作模式下**：若 change 改动 `GameScene.create()` 或加跨场景方法，先在 proposal `touches` 字段声明（见下节）
+
+## GameScene 改动的 touches 声明（双人协作）
+
+> 背景与原因见 `docs/ai-workflow/03-collaboration-rules.md` §1。
+
+`GameScene` 是物理组、overlap 注册、跨场景钩子（`fireShockwave` 类）的集中地，是双人模式下的高频共享改动面。修改前必须在所属 OpenSpec change 的 proposal `touches` 字段声明：
+
+- **新增 group**：group 名 + `classType` + `maxSize`
+- **新增 overlap**：参与的 group / Sprite 对（如 `bullets × enemies`）
+- **新增跨场景方法**：方法签名（如 `fireShockwave(x, y)`）
+- **新增输入键**：键 + 触发条件（避免和 ESC/P/Q 撞）
+
+声明的目的**不是事后审计**，是让另一个人在并行周期内 review proposals 时**提前看见冲突域**——若两份 proposal 同周期都声明改 `GameScene.create()` 加 group，必须协调先后顺序或合并为一个 change。
