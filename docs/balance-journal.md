@@ -35,3 +35,46 @@
 ---
 
 <!-- 真实条目请加在下方，删除上面的示例条目 -->
+
+---
+
+## 2026-04-30 范例：把 /balance-review 输出嵌入 after-feel
+
+> **本条为 `add-balance-review-agent` 引入的格式范例**（详见 `docs/ai-workflow/02-balance-static-review.md`）。后续真实条目可参照此格式，把量化指标对照表嵌入 `after-feel`，作为定性体感的客观锚点。本条**不是**真实的调参留痕——展示新增 `SKILL.damagePercent: 0.2`（来自 `add-shockwave-damage` change，非纯 balance-tune）时 `/balance-review` 子代理会输出什么。
+
+- **改动**：`SKILL.damagePercent`: N/A → 0.2（新字段，非纯数值平衡，实际走 OpenSpec change `add-shockwave-damage`）
+- **why**：作为新增字段的"调前 → 调后"评审范例，演示子代理输出格式与 after-feel 的衔接。
+- **after-feel（含 /balance-review 输出片段）**：
+
+  ```markdown
+  ## Balance Review: SKILL.damagePercent N/A→0.2
+
+  ### 指标对照
+
+  | 指标 | 调前 | 调后 | Δ |
+  |---|---|---|---|
+  | PlayerEffectiveDPS | 35.71 dmg/s | 35.71 dmg/s | 0% |
+  | PlayerEHP | 100 HP | 100 HP | 0 |
+  | EnemyEHP[chaser/rusher/shooter] | 20/12/30 HP | 20/12/30 HP | 0 |
+  | TTK[chaser/rusher/shooter] | 0.56/0.34/0.84 s | 0.56/0.34/0.84 s | 0 |
+  | ShockwaveAoEDamage[chaser] | N/A | 4 HP | 新增 |
+  | ShockwaveAoEDamage[rusher] | N/A | 2.4 HP | 新增 |
+  | ShockwaveAoEDamage[shooter] | N/A | 6 HP | 新增 |
+  | SkillChargeAccrualPerSec | 0.119/s | 0.119/s | 0% |
+  | TimeToFillSkillPool | 8.4 s | 8.4 s | 0 |
+
+  ### 风险点
+
+  - 0.2 不致死任何敌种（最大 shockwave 伤害 6 < rusher.hp 12）。`add-shockwave-damage` 提案的"清场 → 击杀掉 SkillOrb → 回充"闭环依赖 post-shockwave 子弹补刀，**不**由 shockwave 自身触发。
+  - 残血敌人 post-shockwave 子弹补刀次数：chaser 1.6 → 2 发, rusher 0.96 → 1 发, shooter 2.4 → 3 发。技能效果是"软化"而非"清场"。
+
+  ### 建议手测重点
+
+  - 触发一次冲击波后，rusher / chaser / shooter 残血是否符合演算（残 9.6 / 16 / 24）？
+  - 0.2 vs 0.4 vs 0.5 对照（参考 `add-shockwave-damage` tasks 4.8），哪档让"补刀感"最自然？
+  - 0.2 时单次冲击波是否能清掉低血垃圾兵堆？若不能，提案中的"闭环"价值显著打折。
+
+  > 本评审为静态推算，**不替代** playtest 体感。走位优劣、敌人组合、玩家升级路线均会显著偏离上述指标——把它当做手测前的"看哪里"地图，不当做结论。
+  ```
+
+  **嵌入风格说明**：完整把 `/balance-review` 输出粘贴到 after-feel 段，是范例的"详尽形式"。日常 balance-tune 留痕时也可以**只摘取**最关键的 1-2 行指标变化（如 `TTK[rusher] 0.34s → 0.50s, +47%`），让 journal 保持轻量。详尽形式适合大幅或多维度调整；摘要形式适合单参数微调。

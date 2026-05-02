@@ -1,24 +1,24 @@
 ## 1. Prerequisites
 
-- [ ] 1.1 确认 `add-shockwave-skill` 已归档：`openspec list --json` 应**不**包含 `add-shockwave-skill`
-- [ ] 1.2 确认主 spec 已同步：`openspec/specs/active-skill-shockwave/spec.md` 存在且包含 `Requirement: Shockwave Knocks Back Nearby Enemies` 完整原文
-- [ ] 1.3 跑 `openspec validate add-shockwave-damage` 校验 MODIFIED 头与主 spec 文本完全匹配（白空格忽略）
+- [x] 1.1 确认 `add-shockwave-skill` 已归档：`openspec list --json` 应**不**包含 `add-shockwave-skill`
+- [x] 1.2 确认主 spec 已同步：`openspec/specs/active-skill-shockwave/spec.md` 存在且包含 `Requirement: Shockwave Knocks Back Nearby Enemies` 完整原文
+- [x] 1.3 跑 `openspec validate add-shockwave-damage` 校验 MODIFIED 头与主 spec 文本完全匹配（白空格忽略）
 
 ## 2. Config
 
-- [ ] 2.1 `src/config.js` 的 `SKILL` 块新增字段：`damagePercent: 0.4,`（位置紧邻 `knockbackRadius` / `knockbackForce`，便于以后按"伤害-击退"语义聚类）
+- [x] 2.1 `src/config.js` 的 `SKILL` 块新增字段：`damagePercent: 0.4,`（位置紧邻 `knockbackRadius` / `knockbackForce`，便于以后按"伤害-击退"语义聚类）
 
 ## 3. GameScene.fireShockwave 修改
 
-- [ ] 3.1 在 `src/scenes/GameScene.js` 的 `fireShockwave(x, y)` 中，定位现有的 `if (d < SKILL.knockbackRadius) e.knockback(...)` 一行
-- [ ] 3.2 改写为先 damage 后 knockback、致死跳过击退：
+- [x] 3.1 在 `src/scenes/GameScene.js` 的 `fireShockwave(x, y)` 中，定位现有的 `if (d < SKILL.knockbackRadius) e.knockback(...)` 一行
+- [x] 3.2 改写为先 damage 后 knockback、致死跳过击退：
   ```js
   if (d < SKILL.knockbackRadius) {
     e.takeDamage(e.maxHp * SKILL.damagePercent);
     if (!e.dead) e.knockback(x, y, SKILL.knockbackForce);
   }
   ```
-- [ ] 3.3 保持 `if (e.dead) return;` 在循环顶部不变（既有守卫，避免对已死敌人重复处理）
+- [x] 3.3 保持 `if (e.dead) return;` 在循环顶部不变（既有守卫，避免对已死敌人重复处理）
 
 ## 4. Manual Verification (Browser)
 
@@ -42,5 +42,5 @@
 
 ## 6. Spec Sync Sanity
 
-- [ ] 6.1 实施完成后再跑一次 `openspec validate add-shockwave-damage` 确认无新增的 spec 不一致
+- [x] 6.1 实施完成后再跑一次 `openspec validate add-shockwave-damage` 确认无新增的 spec 不一致
 - [ ] 6.2 提交：`feat: shockwave 范围伤害（modified active-skill-shockwave）`

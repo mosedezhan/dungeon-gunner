@@ -44,6 +44,7 @@ export const SKILL = {
   dropChance: 0.1,
   knockbackRadius: 120,
   knockbackForce: 480,
+  damagePercent: 0.2,
   vfxMaxScale: 8,
   vfxDurationMs: 500,
 };

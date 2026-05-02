@@ -137,7 +137,10 @@ export class GameScene extends Phaser.Scene {
     this.enemies.getChildren().forEach(e => {
       if (e.dead) return;
       const d = Phaser.Math.Distance.Between(x, y, e.x, e.y);
-      if (d < SKILL.knockbackRadius) e.knockback(x, y, SKILL.knockbackForce);
+      if (d < SKILL.knockbackRadius) {
+        e.takeDamage(e.maxHp * SKILL.damagePercent);
+        if (!e.dead) e.knockback(x, y, SKILL.knockbackForce);
+      }
     });
     this._spawnShockwaveVfx(x, y);
     this.cameras.main.shake(120, 0.004);
