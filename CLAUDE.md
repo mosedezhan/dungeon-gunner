@@ -47,7 +47,10 @@ BootScene → MenuScene → GameScene（并行运行：HUDScene）
 
 ### 配置文件 (`src/config.js`)
 
-所有可调参数的唯一来源：玩家属性、敌人定义、波次时间、XP 曲线、`SKILL` 主动技能参数、升级定义。`UPGRADES` 数组包含 `apply(p)` 函数，直接修改 `Player.stats`。调整游戏平衡时只需修改此文件。
+所有可调参数的唯一来源：玩家属性、敌人定义、波次时间、XP 曲线、`SKILL` 主动技能参数、`WORLD` 世界尺寸、升级定义。`UPGRADES` 数组包含 `apply(p)` 函数，直接修改 `Player.stats`。调整游戏平衡时只需修改此文件。
+
+- **`GAME`** — 镜头/视口尺寸（1280×720），Phaser 游戏配置使用
+- **`WORLD`** — 世界边界尺寸（3840×3600），相机在此范围内跟随玩家移动
 
 ### 关键约定
 
