@@ -27,7 +27,15 @@
       "Bash(node -c src/entities/Player.js)",
       "Bash(node -c src/scenes/GameScene.js)",
       "Bash(node -c src/scenes/MenuScene.js)",
-      "Bash(git mv *)"
+      "Bash(git mv *)",
+      "Bash(python *)",
+      "Bash(winget install *)",
+      "Read(//c/Users/Admin/AppData/Local/Programs/Python/Python312/**)",
+      "Read(//c/Python312/**)",
+      "Bash(where python *)",
+      "Bash(/c/Users/Admin/AppData/Local/Programs/Python/Python312/python.exe *)",
+      "Bash(cat openspec/changes)",
+      "Bash(ls openspec/)"
     ]
   }
 }

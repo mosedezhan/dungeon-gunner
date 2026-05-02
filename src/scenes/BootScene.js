@@ -198,6 +198,50 @@ const SHOOTER_B = [
   '...O....O...',
 ];
 
+// Giant: tall lanky humanoid with club, earthy tones (Elder Scrolls style)
+const GIANT_PALETTE = {
+  S: 0xc8a878, s: 0x8a6a44, E: 0xffffff, M: 0xdd2222,
+  F: 0x4a3218, f: 0x6a4a2a, B: 0x7a5a38, b: 0x5a3a22,
+  C: 0x8a7a5a, c: 0x6a5a3a, O: 0x050302,
+};
+
+const GIANT_A = [
+  '....OOOO....',
+  '...OssssO...',
+  '..OsSEESsO..',
+  '..OsSMMSsO..',
+  '..OsssssO...',
+  '...OsssO....',
+  '..OBsBO.CC..',
+  '.OsBBBBsOC..',
+  '.OsBBbBBsO..',
+  '.OsBBBBBsO..',
+  '..OBBbBBO...',
+  '..OBFFFBO...',
+  '...OFffFO...',
+  '..OLL..LLO..',
+  '..OLL..LLO..',
+  '..OO....OO..',
+];
+const GIANT_B = [
+  '....OOOO....',
+  '...OssssO...',
+  '..OsSEESsO..',
+  '..OsSMMSsO..',
+  '..OsssssO...',
+  '...OsssO....',
+  '..OBsBO.CC..',
+  '.OsBBBBsOC..',
+  '.OsBBbBBsO..',
+  '.OsBBBBBsO..',
+  '..OBBbBBO...',
+  '..OBFFFBO...',
+  '...OFffFO...',
+  '.OLL....OLLO',
+  '..OLO..OLO..',
+  '..OO....OO..',
+];
+
 export class BootScene extends Phaser.Scene {
   constructor() { super('BootScene'); }
 
@@ -226,6 +270,8 @@ export class BootScene extends Phaser.Scene {
     makeTex(this, 'rusher_b',  RUSHER_B,  RUSHER_PALETTE);
     makeTex(this, 'shooter_a', SHOOTER_A, SHOOTER_PALETTE);
     makeTex(this, 'shooter_b', SHOOTER_B, SHOOTER_PALETTE);
+    makeTex(this, 'giant_a', GIANT_A, GIANT_PALETTE);
+    makeTex(this, 'giant_b', GIANT_B, GIANT_PALETTE);
 
     // Gun: small horizontal sprite (barrel points right at angle 0)
     const gun = this.add.graphics().setVisible(false);
@@ -329,6 +375,22 @@ export class BootScene extends Phaser.Scene {
     shock.generateTexture('shockwave', 64, 64);
     shock.destroy();
 
+    // Slam impact: expanding ring shockwave (orange-yellow)
+    const slamImp = this.add.graphics().setVisible(false);
+    slamImp.fillStyle(0xffaa44, 0.15); slamImp.fillCircle(24, 24, 24);
+    slamImp.lineStyle(3, 0xffddaa, 1.0);  slamImp.strokeCircle(24, 24, 22);
+    slamImp.lineStyle(2, 0xffaa44, 0.85); slamImp.strokeCircle(24, 24, 18);
+    slamImp.lineStyle(1, 0xffffff, 0.5);  slamImp.strokeCircle(24, 24, 25);
+    slamImp.generateTexture('slam_impact', 48, 48);
+    slamImp.destroy();
+
+    // Slam dust particle: soft brown blob
+    const dustG = this.add.graphics().setVisible(false);
+    dustG.fillStyle(0x8a7a5a, 0.7); dustG.fillCircle(6, 6, 6);
+    dustG.fillStyle(0xaa9a6a, 0.4); dustG.fillCircle(6, 6, 4);
+    dustG.generateTexture('slam_dust', 12, 12);
+    dustG.destroy();
+
     // Create animations
     this.anims.create({
       key: 'player_idle',
@@ -374,6 +436,16 @@ export class BootScene extends Phaser.Scene {
       key: 'shooter_walk',
       frames: [{ key: 'shooter_a' }, { key: 'shooter_b' }],
       frameRate: 3, repeat: -1,
+    });
+    this.anims.create({
+      key: 'giant_walk',
+      frames: [{ key: 'giant_a' }, { key: 'giant_b' }],
+      frameRate: 3, repeat: -1,
+    });
+    this.anims.create({
+      key: 'giant_die',
+      frames: [{ key: 'giant_a' }, { key: 'giant_b' }],
+      frameRate: 8, repeat: 0,
     });
 
     this.scene.start('MenuScene');

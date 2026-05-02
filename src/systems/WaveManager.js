@@ -2,6 +2,7 @@ import { WAVE } from '../config.js';
 import { Chaser } from '../entities/enemies/Chaser.js';
 import { Rusher } from '../entities/enemies/Rusher.js';
 import { Shooter } from '../entities/enemies/Shooter.js';
+import { Giant } from '../entities/enemies/Giant.js';
 
 export class WaveManager {
   constructor(scene) {
@@ -33,6 +34,8 @@ export class WaveManager {
     if (w >= 5) mix.push(Shooter);
     if (w >= 6) mix.push(Rusher);
     if (w >= 8) mix.push(Shooter);
+    if (w >= 5) mix.push(Giant);
+    if (w >= 9) mix.push(Giant);
     return mix;
   }
 

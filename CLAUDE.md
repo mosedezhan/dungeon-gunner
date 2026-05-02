@@ -40,7 +40,7 @@ BootScene → MenuScene → GameScene（并行运行：HUDScene）
 实体继承 `Phaser.Physics.Arcade.Sprite`，通过 `scene.add.existing(this)` + `scene.physics.add.existing(this)` 自注册。通过 `scene.physics.add.group({ classType, maxSize })` 进行对象池化。
 
 - **Player** — 持有 `stats` 对象（`PLAYER` 配置的可变副本）。枪是独立的精灵，跟随鼠标旋转。`muzzle` 是每帧更新的 `Vector2`，作为子弹生成点。支持无敌帧和生命回复累积。持有主动技能充能（`skillCharges` / `stats.skillChargesMax`），按 Q 触发 `triggerSkill()`。
-- **Enemy**（基类）— 由 `Chaser`、`Rusher`、`Shooter` 继承。各自从 `ENEMY` 配置块读取行为参数。敌人在 `preUpdate` 中执行 AI（追踪/走位/射击）。`Shooter` 使用场景的 `enemyBullets` 组发射子弹。
+- **Enemy**（基类）— 由 `Chaser`、`Rusher`、`Shooter`、`Giant` 继承。各自从 `ENEMY` 配置块读取行为参数。敌人在 `preUpdate` 中执行 AI（追踪/走位/射击）。`Shooter` 使用场景的 `enemyBullets` 组发射子弹。`Giant` 使用四拍状态机（windup / swing / impact / recovery）驱动砸地 AOE，各阶段时长按 `scene.slowFactor` 缩放（与 Shooter 射击节流同模式）；重写 `knockback()` 在蓄力期间免疫击退，重写 `die()` 播放放大死亡特效。
 - **Bullet / EnemyBullet** — 发射后自动飞行的弹丸，有生命周期和出界回收。玩家子弹通过 `hitSet` 追踪穿透（同一敌人只命中一次）。
 - **XPOrb** — 通过缓动实现脉冲动画，在 `XP.pickupRadius` 半径内被玩家吸引。
 - **SkillOrb** — 与 XPOrb 同模式（脉冲 + 吸附），拾取后增加 `Player.skillCharges`，由敌人死亡按 `SKILL.dropChance` 概率掉落。
@@ -54,7 +54,7 @@ BootScene → MenuScene → GameScene（并行运行：HUDScene）
 - **无需外部资源。** 所有精灵都是 BootScene 中程序化生成的像素艺术。纹理 key 是硬编码字符串，在场景/实体间交叉引用。
 - **场景通信** 使用 Phaser 场景管理器（`scene.get()`、`scene.pause()`、`scene.launch()`、带数据的 `scene.start()`）。不使用事件总线。
 - **`GameScene.handleEnemyDeath()`** 由 `Enemy.die()` 通过场景引用调用 — 这是生成 XP 球和追踪击杀数的钩子。
-- **主动技能钩子** — `Player.triggerSkill()` 消耗充能后调 `this.scene.fireShockwave?.(x, y)`；与 `handleEnemyDeath` 同模式，让 GameScene 集中处理需要遍历物理组的效果。
+- **主动技能钩子** — `Player.triggerSkill()` 消耗充能后调 `this.scene.useSkill?.(this)`；`GameScene.useSkill(player)` 按 `CLASSES[classId].skill` 字符串分派到具体实现（shockwave / bullet_time）。
 - **物理组** 使用 `runChildUpdate: true`，使池化实体在激活时自动调用 `preUpdate`。
 
 ## 美术方向

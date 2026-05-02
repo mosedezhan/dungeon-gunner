@@ -34,6 +34,11 @@ export const ENEMY = {
     hp: 30, speed: 55, contactDamage: 6, radius: 9, xp: 3, tint: 0xc85a9a, bodyTint: 0x7a2a5a,
     preferredRange: 260, fireRateMs: 1400, bulletSpeed: 260, bulletDamage: 12
   },
+  giant: {
+    hp: 100, speed: 38, contactDamage: 14, radius: 14, xp: 8, tint: 0xc8a878, bodyTint: 0x4a3218,
+    slamTriggerRange: 130, windUpMs: 400, swingMs: 100, impactMs: 100, recoveryMs: 400,
+    slamCooldownMs: 3000, slamRadius: 90, slamDamage: 25,
+  },
 };
 
 export const XP = {
