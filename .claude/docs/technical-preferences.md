@@ -1,87 +1,70 @@
-# Technical Preferences
+# 技术偏好
 
-<!-- Populated by /setup-engine. Updated as the user makes decisions throughout development. -->
-<!-- All agents reference this file for project-specific standards and conventions. -->
+## 引擎与语言
 
-## Engine & Language
+- **引擎**: Phaser 3 (HTML5 Canvas)
+- **语言**: JavaScript (ES6 模块)
+- **渲染**: Canvas 2D, pixelArt 模式
+- **物理**: Arcade Physics
 
-- **Engine**: [TO BE CONFIGURED — run /setup-engine]
-- **Language**: [TO BE CONFIGURED]
-- **Rendering**: [TO BE CONFIGURED]
-- **Physics**: [TO BE CONFIGURED]
+## 输入与平台
 
-## Input & Platform
+- **目标平台**: Web（浏览器）
+- **输入方式**: 键盘 + 鼠标
+- **主要输入**: 键盘/鼠标
+- **手柄支持**: 无
+- **触屏支持**: 无
+- **平台说明**: 需要本地静态服务器运行（ES 模块不支持 file:// 协议）
 
-<!-- Written by /setup-engine. Read by /ux-design, /ux-review, /test-setup, /team-ui, and /dev-story -->
-<!-- to scope interaction specs, test helpers, and implementation to the correct input methods. -->
+## 命名规范
 
-- **Target Platforms**: [TO BE CONFIGURED — e.g., PC, Console, Mobile, Web]
-- **Input Methods**: [TO BE CONFIGURED — e.g., Keyboard/Mouse, Gamepad, Touch, Mixed]
-- **Primary Input**: [TO BE CONFIGURED — the dominant input for this game]
-- **Gamepad Support**: [TO BE CONFIGURED — Full / Partial / None]
-- **Touch Support**: [TO BE CONFIGURED — Full / Partial / None]
-- **Platform Notes**: [TO BE CONFIGURED — any platform-specific UX constraints]
+- **类名**: PascalCase（如 `GameScene`、`Player`、`WaveManager`）
+- **变量**: camelCase（如 `moveSpeed`、`fireRateMs`）
+- **常量**: UPPER_SNAKE_CASE（如 `PLAYER`、`ENEMY`、`XP`）
+- **文件名**: PascalCase（如 `GameScene.js`、`Player.js`）
+- **配置块**: UPPER_SNAKE_CASE（如 `PLAYER`、`ENEMY`、`WAVE`、`SKILL`、`XP`）
 
-## Naming Conventions
+## 性能预算
 
-- **Classes**: [TO BE CONFIGURED]
-- **Variables**: [TO BE CONFIGURED]
-- **Signals/Events**: [TO BE CONFIGURED]
-- **Files**: [TO BE CONFIGURED]
-- **Scenes/Prefabs**: [TO BE CONFIGURED]
-- **Constants**: [TO BE CONFIGURED]
+- **目标帧率**: 60fps
+- **帧预算**: 16.6ms
+- **绘制调用**: 最少（程序化精灵，无精灵图）
+- **内存上限**: 浏览器管理
 
-## Performance Budgets
+## 测试
 
-- **Target Framerate**: [TO BE CONFIGURED]
-- **Frame Budget**: [TO BE CONFIGURED]
-- **Draw Calls**: [TO BE CONFIGURED]
-- **Memory Ceiling**: [TO BE CONFIGURED]
+- **框架**: 无（浏览器手动测试）
+- **最低覆盖率**: 不适用
+- **必需测试**: 通过 `/playtest` 生成手动测试清单
 
-## Testing
+## 禁止模式
 
-- **Framework**: [TO BE CONFIGURED]
-- **Minimum Coverage**: [TO BE CONFIGURED]
-- **Required Tests**: Balance formulas, gameplay systems, networking (if applicable)
+- 场景/实体代码中禁止硬编码游戏数值 — 所有数值来自配置文件
+- 禁止依赖外部美术资源 — 所有图形程序化生成
 
-## Forbidden Patterns
+## 允许的库 / 插件
 
-<!-- Add patterns that should never appear in this project's codebase -->
-- [None configured yet — add as architectural decisions are made]
+- **Phaser 3**（CDN 加载）
 
-## Allowed Libraries / Addons
+## 架构决策日志
 
-<!-- Add approved third-party dependencies here -->
-- [None configured yet — add as dependencies are approved]
+- [尚无 ADR — 使用 /architecture-decision 创建]
 
-## Architecture Decisions Log
+## 引擎专家
 
-<!-- Quick reference linking to full ADRs in docs/architecture/ -->
-- [No ADRs yet — use /architecture-decision to create one]
+- **主要**: gameplay-programmer（Phaser 3 非模板原生支持的引擎）
+- **语言/代码专家**: gameplay-programmer
+- **着色器专家**: 不适用（Canvas 2D）
+- **UI 专家**: ui-programmer
+- **其他专家**: 无
+- **路由说明**: Phaser 3 没有专用专家。所有游戏代码路由到 gameplay-programmer。UI 代码路由到 ui-programmer。
 
-## Engine Specialists
+### 文件扩展名路由
 
-<!-- Written by /setup-engine when engine is configured. -->
-<!-- Read by /code-review, /architecture-decision, /architecture-review, and team skills -->
-<!-- to know which specialist to spawn for engine-specific validation. -->
-
-- **Primary**: [TO BE CONFIGURED — run /setup-engine]
-- **Language/Code Specialist**: [TO BE CONFIGURED]
-- **Shader Specialist**: [TO BE CONFIGURED]
-- **UI Specialist**: [TO BE CONFIGURED]
-- **Additional Specialists**: [TO BE CONFIGURED]
-- **Routing Notes**: [TO BE CONFIGURED]
-
-### File Extension Routing
-
-<!-- Skills use this table to select the right specialist per file type. -->
-<!-- If a row says [TO BE CONFIGURED], fall back to Primary for that file type. -->
-
-| File Extension / Type | Specialist to Spawn |
+| 文件扩展名 / 类型 | 路由到的专家 |
 |-----------------------|---------------------|
-| Game code (primary language) | [TO BE CONFIGURED] |
-| Shader / material files | [TO BE CONFIGURED] |
-| UI / screen files | [TO BE CONFIGURED] |
-| Scene / prefab / level files | [TO BE CONFIGURED] |
-| Native extension / plugin files | [TO BE CONFIGURED] |
-| General architecture review | Primary |
+| 游戏代码（.js 文件） | gameplay-programmer |
+| 样式文件（.css） | ui-programmer |
+| HTML 入口（.html） | ui-programmer |
+| 配置/数据文件（.js 配置） | gameplay-programmer |
+| 通用架构评审 | gameplay-programmer |

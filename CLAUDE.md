@@ -3,24 +3,24 @@
 Indie game development managed through 48 coordinated Claude Code subagents.
 Each agent owns a specific domain, enforcing separation of concerns and quality.
 
-## Technology Stack
+## 技术栈
 
-- **Engine**: [CHOOSE: Godot 4 / Unity / Unreal Engine 5]
-- **Language**: [CHOOSE: GDScript / C# / C++ / Blueprint]
-- **Version Control**: Git with trunk-based development
-- **Build System**: [SPECIFY after choosing engine]
-- **Asset Pipeline**: [SPECIFY after choosing engine]
+- **引擎**: Phaser 3 (HTML5 Canvas)
+- **语言**: JavaScript (ES6 模块)
+- **物理**: Arcade Physics
+- **版本控制**: Git
+- **构建**: 无构建步骤，CDN 加载 Phaser
+- **资源管线**: 所有图形程序化生成，无外部资源
 
-> **Note**: Engine-specialist agents exist for Godot, Unity, and Unreal with
-> dedicated sub-specialists. Use the set matching your engine.
+> **注意**: Phaser 3 非模板原生引擎。游戏代码路由到 gameplay-programmer。
 
 ## Project Structure
 
 @.claude/docs/directory-structure.md
 
-## Engine Version Reference
+## 引擎版本参考
 
-@docs/engine-reference/godot/VERSION.md
+> Phaser 3 版本在 LLM 训练数据范围内，不需要额外引擎参考文档。
 
 ## Technical Preferences
 
@@ -30,25 +30,25 @@ Each agent owns a specific domain, enforcing separation of concerns and quality.
 
 @.claude/docs/coordination-rules.md
 
-## Collaboration Protocol
+## 协作协议
 
-**User-driven collaboration, not autonomous execution.**
-Every task follows: **Question -> Options -> Decision -> Draft -> Approval**
+**用户驱动协作，非自主执行。**
+每步遵循：**提问 → 选项 → 决策 → 草案 → 审批**
 
-- Agents MUST ask "May I write this to [filepath]?" before using Write/Edit tools
-- Agents MUST show drafts or summaries before requesting approval
-- Multi-file changes require explicit approval for the full changeset
-- No commits without user instruction
+- 写文件前必须征得用户同意
+- 多文件变更需整体审批
+- 未经指示不提交代码
 
-See `docs/COLLABORATIVE-DESIGN-PRINCIPLE.md` for full protocol and examples.
+> **首次使用？** 运行 `/start` 开始引导流程。
 
-> **First session?** If the project has no engine configured and no game concept,
-> run `/start` to begin the guided onboarding flow.
-
-## Coding Standards
+## 编码标准
 
 @.claude/docs/coding-standards.md
 
-## Context Management
+## AI 工作流规则
+
+@docs/ai-workflow/RULES.md
+
+## 上下文管理
 
 @.claude/docs/context-management.md
