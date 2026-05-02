@@ -26,7 +26,8 @@
       "Bash(node -c src/scenes/ClassSelectScene.js)",
       "Bash(node -c src/entities/Player.js)",
       "Bash(node -c src/scenes/GameScene.js)",
-      "Bash(node -c src/scenes/MenuScene.js)"
+      "Bash(node -c src/scenes/MenuScene.js)",
+      "Bash(git mv *)"
     ]
   }
 }

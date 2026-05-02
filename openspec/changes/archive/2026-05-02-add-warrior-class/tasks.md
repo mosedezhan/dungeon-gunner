@@ -80,6 +80,6 @@
 
 - [x] 10.1 跑 `/balance-review`（如脚本可用）或手测前 3 波 TTK；偏差 ≥30% 时优先调 `damage` 与 `attackRateMs`
 - [x] 10.2 在 `docs/balance-journal.md` 追加一条战士初始数值的 baseline 与手测后的 after-feel
-- [ ] 10.3 commit 用 `feat:` 前缀（如 `feat: add warrior class with bullet-time skill and per-class upgrade pool`）
-- [ ] 10.4 跑 `/opsx:archive add-warrior-class` 归档；同时确认是否需要先归档已完成的 `add-class-selection`
+- [x] 10.3 commit 用 `feat:` 前缀（如 `feat: add warrior class with bullet-time skill and per-class upgrade pool`）
+- [ ] 10.4 跑 `/opsx:archive add-warrior-class` 归档；同时确认是否需要先归档已完成的 `add-class-selection`（已完成：已在另一线程归档至 archive/2026-05-02-add-class-selection/，且本次提交已补齐 openspec/specs/class-selection/）
 - [ ] 10.5 确认归档后 `openspec/specs/class-warrior/` 与 `openspec/specs/active-skill-bullet-time/` 已生成
