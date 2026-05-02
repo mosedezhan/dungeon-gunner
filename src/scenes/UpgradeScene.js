@@ -29,7 +29,8 @@ export class UpgradeScene extends Phaser.Scene {
 
   showCards() {
     this.cardLayer.removeAll(true);
-    this.picks = randomUpgrades(3);
+    const classId = this.scene.get('GameScene').player?.classId;
+    this.picks = randomUpgrades(3, classId);
     this.subTitle.setText(`choose an upgrade  (1 / 2 / 3)   —   ${this.remaining} left`);
 
     const cw = 220, ch = 240, gap = 24;

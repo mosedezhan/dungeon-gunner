@@ -1,8 +1,10 @@
-import { PLAYER } from '../config.js';
+import { PLAYER, CLASSES } from '../config.js';
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
-  constructor(scene, x, y) {
-    super(scene, x, y, 'player_idle_a');
+  constructor(scene, x, y, classId = 'player') {
+    const cls = CLASSES[classId];
+    const texturePrefix = cls?.textureKey ?? 'player';
+    super(scene, x, y, texturePrefix + '_idle_a');
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.setScale(2);
@@ -13,7 +15,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     const r = 8;
     this.body.setCircle(r, this.width / 2 - r, this.height / 2 - r);
 
-    this.stats = { ...PLAYER };
+    this.classId = classId;
+    this.texturePrefix = texturePrefix;
+    this.stats = { ...PLAYER, ...(cls?.baseStats ?? {}) };
     this.hp = this.stats.maxHp;
     this.level = 1;
     this.xp = 0;
@@ -21,13 +25,18 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.kills = 0;
     this.invulnUntil = 0;
     this.lastShotAt = -9999;
+    this.lastSwingAt = -9999;
     this.regenAccum = 0;
     this.dead = false;
     this.skillCharges = 0;
 
-    this.gun = scene.add.sprite(x, y, 'gun').setOrigin(0.15, 0.5).setDepth(11).setScale(2);
+    const weaponKey = classId === 'warrior' ? 'sword' : 'gun';
+    this.weapon = scene.add.sprite(x, y, weaponKey).setOrigin(0.15, 0.5).setDepth(11).setScale(2);
+    this.gun = this.weapon;
     this.muzzle = new Phaser.Math.Vector2();
-    this._gunRestOffset = 0;
+    this._weaponRestOffset = 0;
+    this._aimAngle = 0;
+    this._swingActive = false;
 
     this.keys = scene.input.keyboard.addKeys({
       W: Phaser.Input.Keyboard.KeyCodes.W,
@@ -37,7 +46,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     });
     this.cursors = scene.input.keyboard.createCursorKeys();
 
-    this.play('player_idle');
+    this.play(this.texturePrefix + '_idle');
   }
 
   update(time, delta) {
@@ -54,35 +63,37 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (moving) {
       const inv = 1 / Math.hypot(vx, vy);
       this.setVelocity(vx * inv * this.stats.moveSpeed, vy * inv * this.stats.moveSpeed);
-      if (this.anims.currentAnim?.key !== 'player_run') this.play('player_run');
+      if (this.anims.currentAnim?.key !== this.texturePrefix + '_run') this.play(this.texturePrefix + '_run');
     } else {
       this.setVelocity(0, 0);
-      if (this.anims.currentAnim?.key !== 'player_idle') this.play('player_idle');
+      if (this.anims.currentAnim?.key !== this.texturePrefix + '_idle') this.play(this.texturePrefix + '_idle');
     }
 
     // Aim
     const p = this.scene.input.activePointer;
     const world = p.positionToCamera(this.scene.cameras.main);
     const angle = Math.atan2(world.y - this.y, world.x - this.x);
+    this._aimAngle = angle;
 
-    const gunOffsetY = 6;
-    this.gun.x = this.x - Math.cos(angle) * this._gunRestOffset;
-    this.gun.y = this.y + gunOffsetY - Math.sin(angle) * this._gunRestOffset;
-    this.gun.rotation = angle;
-    // Flip gun vertically when aiming left so grip stays on bottom
-    this.gun.setFlipY(Math.abs(angle) > Math.PI / 2);
+    const offsetY = 6;
+    this.weapon.x = this.x - Math.cos(angle) * this._weaponRestOffset;
+    this.weapon.y = this.y + offsetY - Math.sin(angle) * this._weaponRestOffset;
+    if (!this._swingActive) {
+      this.weapon.rotation = angle;
+      this.weapon.setFlipY(Math.abs(angle) > Math.PI / 2);
+    }
     this.flipX = world.x < this.x;
 
-    // Gun recoil recover
-    this._gunRestOffset *= Math.pow(0.0005, delta / 1000);
+    this._weaponRestOffset *= Math.pow(0.0005, delta / 1000);
 
-    const barrelLen = 24;
-    this.muzzle.set(
-      this.gun.x + Math.cos(angle) * barrelLen,
-      this.gun.y + Math.sin(angle) * barrelLen
-    );
+    if (this.classId !== 'warrior') {
+      const barrelLen = 24;
+      this.muzzle.set(
+        this.weapon.x + Math.cos(angle) * barrelLen,
+        this.weapon.y + Math.sin(angle) * barrelLen
+      );
+    }
 
-    // Regen
     if (this.stats.regen > 0 && this.hp < this.stats.maxHp) {
       this.regenAccum += (delta / 1000) * this.stats.regen;
       if (this.regenAccum >= 1) {
@@ -93,17 +104,33 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
   }
 
+  tryAttack(time) {
+    if (this.dead) return;
+    if (this.classId === 'warrior') this._doSwing(time);
+    else this._doShoot(time);
+  }
+
+  _doShoot(time) {
+    this.scene.tryShoot?.(time);
+  }
+
+  _doSwing(time) {
+    if (time - this.lastSwingAt < this.stats.attackRateMs) return;
+    this.lastSwingAt = time;
+    this.scene.performSwing?.(this, this._aimAngle);
+  }
+
   canShoot(time) {
     return !this.dead && time - this.lastShotAt >= this.stats.fireRateMs;
   }
 
   markShot(time) {
     this.lastShotAt = time;
-    this._gunRestOffset = 4;
+    this._weaponRestOffset = 4;
   }
 
   aimAngle() {
-    return this.gun.rotation;
+    return this._aimAngle;
   }
 
   takeDamage(amount, time) {
@@ -135,7 +162,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.setVelocity(0, 0);
     this.body.enable = false;
     this.scene.tweens.add({
-      targets: [this, this.gun],
+      targets: [this, this.weapon],
       alpha: 0, scale: 0.5, angle: 90, duration: 600, ease: 'Cubic.easeIn',
       onComplete: () => this.scene.onPlayerDead?.(),
     });
@@ -144,7 +171,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   triggerSkill() {
     if (this.dead || this.skillCharges <= 0) return false;
     this.skillCharges -= 1;
-    this.scene.fireShockwave?.(this.x, this.y);
+    this.scene.useSkill?.(this);
     return true;
   }
 

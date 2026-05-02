@@ -27,6 +27,18 @@ const PLAYER_PALETTE = {
   L: 0x24244a, F: 0x120a05, O: 0x080408,
 };
 
+const MAGE_PALETTE = {
+  H: 0x1a1a2a, S: 0x88b8ff, s: 0x5a88d8, E: 0x0a1a3a,
+  T: 0x2288ff, t: 0x1044aa, B: 0x1a2a3a,
+  L: 0x181848, F: 0x050518, O: 0x040410,
+};
+
+const WARRIOR_PALETTE = {
+  H: 0x2a1a0a, S: 0xe8b98a, s: 0xb88a5a, E: 0x1a0a08,
+  T: 0xc8442a, t: 0x8a2a18, B: 0x3a2218,
+  L: 0x4a2418, F: 0x120a05, O: 0x080404,
+};
+
 const PLAYER_IDLE_A = [
   '....OOOO....',
   '...OHHHHO...',
@@ -196,6 +208,18 @@ export class BootScene extends Phaser.Scene {
     makeTex(this, 'player_run_a',  PLAYER_RUN_A,  PLAYER_PALETTE);
     makeTex(this, 'player_run_b',  PLAYER_RUN_B,  PLAYER_PALETTE);
 
+    // Mage: blue variant of player
+    makeTex(this, 'mage_idle_a', PLAYER_IDLE_A, MAGE_PALETTE);
+    makeTex(this, 'mage_idle_b', PLAYER_IDLE_B, MAGE_PALETTE);
+    makeTex(this, 'mage_run_a',  PLAYER_RUN_A,  MAGE_PALETTE);
+    makeTex(this, 'mage_run_b',  PLAYER_RUN_B,  MAGE_PALETTE);
+
+    // Warrior: red/orange variant of player
+    makeTex(this, 'warrior_idle_a', PLAYER_IDLE_A, WARRIOR_PALETTE);
+    makeTex(this, 'warrior_idle_b', PLAYER_IDLE_B, WARRIOR_PALETTE);
+    makeTex(this, 'warrior_run_a',  PLAYER_RUN_A,  WARRIOR_PALETTE);
+    makeTex(this, 'warrior_run_b',  PLAYER_RUN_B,  WARRIOR_PALETTE);
+
     makeTex(this, 'chaser_a',  CHASER_A,  CHASER_PALETTE);
     makeTex(this, 'chaser_b',  CHASER_B,  CHASER_PALETTE);
     makeTex(this, 'rusher_a',  RUSHER_A,  RUSHER_PALETTE);
@@ -211,6 +235,49 @@ export class BootScene extends Phaser.Scene {
     gun.fillStyle(0x5a3a20, 1); gun.fillRect(0, 3, 3, 4);
     gun.generateTexture('gun', 14, 9);
     gun.destroy();
+
+    // Sword: horizontal blade pointing right at angle 0; origin at grip end
+    const sword = this.add.graphics().setVisible(false);
+    sword.fillStyle(0x886622, 1); sword.fillRect(0, 3, 2, 3);  // pommel
+    sword.fillStyle(0x3a2010, 1); sword.fillRect(2, 3, 5, 3);  // grip
+    sword.fillStyle(0xaa8833, 1); sword.fillRect(7, 1, 2, 7);  // crossguard
+    sword.fillStyle(0xddddee, 1); sword.fillRect(9, 3, 12, 3); // blade body
+    sword.fillStyle(0xffffff, 1); sword.fillRect(9, 3, 12, 1); // top highlight
+    sword.fillStyle(0xaaaabb, 1); sword.fillRect(9, 5, 12, 1); // bottom shade
+    sword.fillStyle(0xffffff, 1); sword.fillRect(20, 4, 2, 1); // tip highlight
+    sword.fillStyle(0xddddee, 1); sword.fillRect(21, 3, 1, 3); // tip taper
+    sword.generateTexture('sword', 24, 9);
+    sword.destroy();
+
+    // Slash arc: 90° wedge facing right (+x), cyan/white crescent
+    const SLASH = 96;
+    const slash = this.add.graphics().setVisible(false);
+    const sx = SLASH / 2, sy = SLASH / 2;
+    slash.fillStyle(0x88ddff, 0.18);
+    slash.beginPath(); slash.moveTo(sx, sy);
+    slash.arc(sx, sy, 44, -Math.PI / 4, Math.PI / 4);
+    slash.lineTo(sx, sy); slash.fillPath();
+    slash.lineStyle(2, 0x66ccff, 0.45);
+    slash.beginPath(); slash.arc(sx, sy, 32, -Math.PI / 4, Math.PI / 4); slash.strokePath();
+    slash.lineStyle(2, 0xaaffff, 0.7);
+    slash.beginPath(); slash.arc(sx, sy, 38, -Math.PI / 4, Math.PI / 4); slash.strokePath();
+    slash.lineStyle(3, 0xffffff, 1);
+    slash.beginPath(); slash.arc(sx, sy, 44, -Math.PI / 4, Math.PI / 4); slash.strokePath();
+    slash.generateTexture('slash', SLASH, SLASH);
+    slash.destroy();
+
+    // Bullet-time vignette: screen-sized blue overlay with darker borders
+    const VW = 1280, VH = 720;
+    const vig = this.add.graphics().setVisible(false);
+    vig.fillStyle(0x2244aa, 0.35); vig.fillRect(0, 0, VW, VH);
+    vig.fillStyle(0x001133, 0.45);
+    vig.fillRect(0, 0, VW, 90); vig.fillRect(0, VH - 90, VW, 90);
+    vig.fillRect(0, 0, 110, VH); vig.fillRect(VW - 110, 0, 110, VH);
+    vig.fillStyle(0x000022, 0.65);
+    vig.fillRect(0, 0, VW, 30); vig.fillRect(0, VH - 30, VW, 30);
+    vig.fillRect(0, 0, 40, VH); vig.fillRect(VW - 40, 0, 40, VH);
+    vig.generateTexture('bullet_time_vignette', VW, VH);
+    vig.destroy();
 
     // Bullet (player): bright yellow with white core
     const bullet = this.add.graphics().setVisible(false);
@@ -271,6 +338,26 @@ export class BootScene extends Phaser.Scene {
     this.anims.create({
       key: 'player_run',
       frames: [{ key: 'player_run_a' }, { key: 'player_idle_a' }, { key: 'player_run_b' }, { key: 'player_idle_a' }],
+      frameRate: 10, repeat: -1,
+    });
+    this.anims.create({
+      key: 'mage_idle',
+      frames: [{ key: 'mage_idle_a' }, { key: 'mage_idle_b' }],
+      frameRate: 3, repeat: -1,
+    });
+    this.anims.create({
+      key: 'mage_run',
+      frames: [{ key: 'mage_run_a' }, { key: 'mage_idle_a' }, { key: 'mage_run_b' }, { key: 'mage_idle_a' }],
+      frameRate: 10, repeat: -1,
+    });
+    this.anims.create({
+      key: 'warrior_idle',
+      frames: [{ key: 'warrior_idle_a' }, { key: 'warrior_idle_b' }],
+      frameRate: 3, repeat: -1,
+    });
+    this.anims.create({
+      key: 'warrior_run',
+      frames: [{ key: 'warrior_run_a' }, { key: 'warrior_idle_a' }, { key: 'warrior_run_b' }, { key: 'warrior_idle_a' }],
       frameRate: 10, repeat: -1,
     });
     this.anims.create({

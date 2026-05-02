@@ -29,6 +29,11 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.knockUntil = this.scene.time.now + durationMs;
   }
 
+  setVelocity(x, y) {
+    const sf = this.scene?.slowFactor ?? 1;
+    return super.setVelocity(x * sf, y * sf);
+  }
+
   die() {
     if (this.dead) return;
     this.dead = true;

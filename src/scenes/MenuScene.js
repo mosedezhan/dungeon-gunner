@@ -46,7 +46,7 @@ export class MenuScene extends Phaser.Scene {
     }).setOrigin(0.5);
     this.tweens.add({ targets: prompt, alpha: { from: 1, to: 0.4 }, duration: 700, yoyo: true, repeat: -1 });
 
-    const start = () => this.scene.start('GameScene');
+    const start = () => this.scene.start('ClassSelectScene');
     this.input.keyboard.once('keydown-SPACE', start);
     this.input.once('pointerdown', start);
   }

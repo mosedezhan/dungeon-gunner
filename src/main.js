@@ -1,6 +1,7 @@
 import { GAME } from './config.js';
 import { BootScene } from './scenes/BootScene.js';
 import { MenuScene } from './scenes/MenuScene.js';
+import { ClassSelectScene } from './scenes/ClassSelectScene.js';
 import { GameScene } from './scenes/GameScene.js';
 import { HUDScene } from './scenes/HUDScene.js';
 import { UpgradeScene } from './scenes/UpgradeScene.js';
@@ -19,7 +20,7 @@ const config = {
     default: 'arcade',
     arcade: { debug: false },
   },
-  scene: [BootScene, MenuScene, GameScene, HUDScene, UpgradeScene, PauseScene, GameOverScene],
+  scene: [BootScene, MenuScene, ClassSelectScene, GameScene, HUDScene, UpgradeScene, PauseScene, GameOverScene],
 };
 
 new Phaser.Game(config);

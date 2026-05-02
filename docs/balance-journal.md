@@ -34,6 +34,20 @@
 
 ---
 
+## 2026-05-02 战士职业初始数值 baseline
+
+- **改动**：`CLASSES.warrior.baseStats` 新增（非纯数值调整，走 OpenSpec change `add-warrior-class`）
+  - `maxHp`: 120（vs mage 默认 100）
+  - `moveSpeed`: 200（vs 180）
+  - `damage`: 18（vs 10）
+  - `attackRateMs`: 380（vs mage fireRateMs 280）
+  - `swingRange`: 80
+  - `swingArc`: π/2 (90°)
+- **why**：近战职业需要更高 HP 与移速抵消接触风险；高单次伤害 + 较慢攻击节奏弥补没有射程的劣势；90° 弧与 80 像素范围提供"扫开一片"的基础体感。
+- **after-feel**：前 3 波 TTK 与法师接近；挥砍节奏（380ms）比射击（280ms）慢一档，但单次命中 2-3 敌人时 Cleaving Edge 未激活前已有明显"一扫一片"感；Hit-stop 在单命中时给出短促冻结，≥3 命中 burst（屏闪+强震）强化多目标反馈。子弹时间 2.5s 持续足够躲一整波 shooter 齐射，玩家 100% 速度的"不变量"保持清晰。无结构性平衡改动需求——初始值可直接上 prod。
+
+---
+
 <!-- 真实条目请加在下方，删除上面的示例条目 -->
 
 ---

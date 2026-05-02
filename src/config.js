@@ -60,21 +60,73 @@ export const WAVE = {
   minSpawnMs: 260,
 };
 
+export const CLASSES = {
+  mage: {
+    id: 'mage',
+    name: '法师',
+    description: '精通弹开技能',
+    textureKey: 'mage',
+    skill: 'shockwave',
+    color: 0x4488ff,
+  },
+  warrior: {
+    id: 'warrior',
+    name: '战士',
+    description: '近战挥砍 / 子弹时间',
+    textureKey: 'warrior',
+    skill: 'bullet_time',
+    color: 0xc8442a,
+    baseStats: {
+      maxHp: 120,
+      moveSpeed: 200,
+      damage: 18,
+      attackRateMs: 380,
+      swingRange: 80,
+      swingArc: Math.PI / 2,
+    },
+  },
+};
+
+export const WARRIOR = {
+  swordTweenMs: 120,
+  slashDurationMs: 200,
+  afterimageCount: 2,
+  hitStopMs: 40,
+  hitShakeMs: 50,
+  hitShakeIntensity: 0.003,
+  burstThreshold: 3,
+  burstShakeMs: 120,
+  burstShakeIntensity: 0.008,
+  knockbackForce: 160,
+};
+
+export const BULLET_TIME = {
+  slowFactor: 0.3,
+  durationMs: 2500,
+  vignetteFadeInMs: 150,
+  vignetteFadeOutMs: 300,
+  vignetteAlpha: 0.45,
+};
+
 export const UPGRADES = [
-  { id: 'damage', name: 'Sharper Bullets', desc: '+25% damage', apply: p => { p.stats.damage *= 1.25; } },
-  { id: 'firerate', name: 'Faster Fingers', desc: '+20% fire rate', apply: p => { p.stats.fireRateMs *= 0.83; } },
-  { id: 'movespeed', name: 'Swift Feet', desc: '+15% move speed', apply: p => { p.stats.moveSpeed *= 1.15; } },
-  { id: 'maxhp', name: 'Tough Hide', desc: '+20 max HP (& heal)', apply: p => { p.stats.maxHp += 20; p.hp = p.stats.maxHp; } },
-  { id: 'multishot', name: 'Triple Shot', desc: '+2 bullets spread', apply: p => { p.stats.multishot += 2; } },
-  { id: 'pierce', name: 'Piercing Rounds', desc: '+1 pierce', apply: p => { p.stats.pierce += 1; } },
-  { id: 'bspeed', name: 'Hot Load', desc: '+30% bullet speed', apply: p => { p.stats.bulletSpeed *= 1.3; } },
-  { id: 'regen', name: 'Regeneration', desc: '+1 HP / sec', apply: p => { p.stats.regen += 1; } },
+  { id: 'damage', name: 'Sharper Edge', desc: '+25% damage', classes: ['mage', 'warrior'], apply: p => { p.stats.damage *= 1.25; } },
+  { id: 'firerate', name: 'Faster Fingers', desc: '+20% fire rate', classes: ['mage'], apply: p => { p.stats.fireRateMs *= 0.83; } },
+  { id: 'movespeed', name: 'Swift Feet', desc: '+15% move speed', classes: ['mage', 'warrior'], apply: p => { p.stats.moveSpeed *= 1.15; } },
+  { id: 'maxhp', name: 'Tough Hide', desc: '+20 max HP (& heal)', classes: ['mage', 'warrior'], apply: p => { p.stats.maxHp += 20; p.hp = p.stats.maxHp; } },
+  { id: 'multishot', name: 'Triple Shot', desc: '+2 bullets spread', classes: ['mage'], apply: p => { p.stats.multishot += 2; } },
+  { id: 'pierce', name: 'Piercing Rounds', desc: '+1 pierce', classes: ['mage'], apply: p => { p.stats.pierce += 1; } },
+  { id: 'bspeed', name: 'Hot Load', desc: '+30% bullet speed', classes: ['mage'], apply: p => { p.stats.bulletSpeed *= 1.3; } },
+  { id: 'regen', name: 'Regeneration', desc: '+1 HP / sec', classes: ['mage', 'warrior'], apply: p => { p.stats.regen += 1; } },
   {
-    id: 'skillmax', name: 'Resonance Core', desc: '+1 max skill charge', apply: p => {
+    id: 'skillmax', name: 'Resonance Core', desc: '+1 max skill charge', classes: ['mage', 'warrior'], apply: p => {
       p.stats.skillChargesMax += 1;
       p.skillCharges = Math.min(p.stats.skillChargesMax, p.skillCharges + 1);
     }
   },
+  { id: 'swingrange', name: 'Long Reach', desc: '+20% swing range', classes: ['warrior'], apply: p => { p.stats.swingRange *= 1.2; } },
+  { id: 'swingarc', name: 'Wide Sweep', desc: '+15° swing arc', classes: ['warrior'], apply: p => { p.stats.swingArc += Math.PI / 12; } },
+  { id: 'attackspeed', name: 'Fervor', desc: '+20% swing speed', classes: ['warrior'], apply: p => { p.stats.attackRateMs *= 0.83; } },
+  { id: 'cleave', name: 'Cleaving Edge', desc: '+30% damage when hitting 2+ targets', classes: ['warrior'], apply: p => { p.stats.cleaveBonus = (p.stats.cleaveBonus ?? 0) + 0.3; } },
 ];
 
 export function xpToNext(level) {

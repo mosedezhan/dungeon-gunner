@@ -7,7 +7,10 @@ export class EnemyBullet extends Phaser.Physics.Arcade.Sprite {
 
   fire(x, y, angle, speed, damage) {
     this.enableBody(true, x, y, true, true);
-    this.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
+    this._baseVx = Math.cos(angle) * speed;
+    this._baseVy = Math.sin(angle) * speed;
+    const sf = this.scene.slowFactor ?? 1;
+    this.setVelocity(this._baseVx * sf, this._baseVy * sf);
     this.setRotation(angle);
     this.damage = damage;
     this.spawnedAt = this.scene.time.now;
@@ -20,6 +23,8 @@ export class EnemyBullet extends Phaser.Physics.Arcade.Sprite {
   preUpdate(time, delta) {
     super.preUpdate(time, delta);
     if (!this.active) return;
+    const sf = this.scene.slowFactor ?? 1;
+    this.setVelocity(this._baseVx * sf, this._baseVy * sf);
     if (time - this.spawnedAt > 3000) { this.kill(); return; }
     if (this.scene.world.isOutOfBounds(this.x, this.y, 40)) this.kill();
   }

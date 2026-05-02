@@ -29,7 +29,8 @@ export class Shooter extends Enemy {
       this.flipX = Math.cos(a) < 0;
     }
 
-    if (time - this.lastShotAt >= this.cfg.fireRateMs && dist < pref + 120) {
+    const sf = this.scene.slowFactor ?? 1;
+    if (time - this.lastShotAt >= this.cfg.fireRateMs / sf && dist < pref + 120) {
       this.lastShotAt = time;
       const b = this.scene.enemyBullets.get(this.x, this.y);
       if (b) b.fire(this.x, this.y, a, this.cfg.bulletSpeed, this.cfg.bulletDamage);

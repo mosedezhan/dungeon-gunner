@@ -17,7 +17,16 @@
       "Bash(openspec --help)",
       "Bash(git commit -m ' *)",
       "Bash(openspec archive *)",
-      "Bash(openspec list *)"
+      "Bash(openspec list *)",
+      "Bash(start python *)",
+      "Bash(git push *)",
+      "Bash(powershell *)",
+      "Bash(git commit *)",
+      "Bash(node -c src/main.js)",
+      "Bash(node -c src/scenes/ClassSelectScene.js)",
+      "Bash(node -c src/entities/Player.js)",
+      "Bash(node -c src/scenes/GameScene.js)",
+      "Bash(node -c src/scenes/MenuScene.js)"
     ]
   }
 }

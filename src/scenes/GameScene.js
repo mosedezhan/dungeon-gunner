@@ -1,4 +1,4 @@
-import { GAME, SKILL, WORLD } from '../config.js';
+import { GAME, SKILL, WORLD, CLASSES, WARRIOR, BULLET_TIME } from '../config.js';
 import { Player } from '../entities/Player.js';
 import { Bullet } from '../entities/Bullet.js';
 import { EnemyBullet } from '../entities/EnemyBullet.js';
@@ -10,12 +10,13 @@ import { World } from '../systems/World.js';
 export class GameScene extends Phaser.Scene {
   constructor() { super('GameScene'); }
 
-  create() {
+  create(data) {
     this.world = new World(this);
     this.world.setupPhysicsWorld();
     this.drawFloor();
 
-    this.player = new Player(this, WORLD.width / 2, WORLD.height / 2);
+    const classId = data?.class ?? 'mage';
+    this.player = new Player(this, WORLD.width / 2, WORLD.height / 2, classId);
 
     this.bullets      = this.physics.add.group({ classType: Bullet,      runChildUpdate: true, maxSize: 200 });
     this.enemyBullets = this.physics.add.group({ classType: EnemyBullet, runChildUpdate: true, maxSize: 200 });
@@ -30,6 +31,8 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.overlap(this.player, this.skillOrbs, this.onPickupSkillOrb, null, this);
 
     this.kills = 0;
+    this.slowFactor = 1;
+    this._bulletTimeVignette = null;
     this.waveManager = new WaveManager(this);
 
     // Camera setup: smooth follow with boundary constraint
@@ -140,6 +143,136 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  useSkill(player) {
+    const skillId = CLASSES[player.classId]?.skill;
+    if (skillId === 'shockwave')   this.fireShockwave(player.x, player.y);
+    else if (skillId === 'bullet_time') this.fireBulletTime();
+  }
+
+  performSwing(player, angle) {
+    const range = player.stats.swingRange;
+    const halfArc = player.stats.swingArc / 2;
+    const baseDamage = player.stats.damage;
+    const cleaveBonus = player.stats.cleaveBonus ?? 0;
+
+    const hits = new Set();
+    this.enemies.getChildren().forEach(e => {
+      if (e.dead || hits.has(e)) return;
+      const d = Phaser.Math.Distance.Between(player.x, player.y, e.x, e.y);
+      if (d > range) return;
+      const a = Math.atan2(e.y - player.y, e.x - player.x);
+      const da = Math.abs(Phaser.Math.Angle.Wrap(a - angle));
+      if (da <= halfArc) hits.add(e);
+    });
+
+    const hitCount = hits.size;
+    const damage = hitCount >= 2 ? baseDamage * (1 + cleaveBonus) : baseDamage;
+    hits.forEach(e => {
+      e.takeDamage(damage);
+      if (!e.dead) e.knockback(player.x, player.y, WARRIOR.knockbackForce);
+    });
+
+    this._spawnSwingVfx(player, angle);
+
+    if (hitCount > 0) {
+      if (hitCount >= WARRIOR.burstThreshold) {
+        const flash = this.add.rectangle(0, 0, GAME.width, GAME.height, 0xffffff, 0.55)
+          .setOrigin(0).setScrollFactor(0).setDepth(50);
+        this.time.delayedCall(40, () => flash.destroy());
+        this.cameras.main.shake(WARRIOR.burstShakeMs, WARRIOR.burstShakeIntensity);
+      } else {
+        this.cameras.main.shake(WARRIOR.hitShakeMs, WARRIOR.hitShakeIntensity);
+      }
+      if (this.slowFactor === 1) this._triggerHitStop();
+    }
+  }
+
+  _spawnSwingVfx(player, angle) {
+    const halfArc = player.stats.swingArc / 2;
+    const startRot = angle - halfArc;
+    const endRot   = angle + halfArc;
+    const w = player.weapon;
+
+    player._swingActive = true;
+    w.rotation = startRot;
+    w.setFlipY(false);
+    this.tweens.add({
+      targets: w,
+      rotation: endRot,
+      duration: WARRIOR.swordTweenMs,
+      ease: 'Cubic.easeOut',
+      onComplete: () => { player._swingActive = false; },
+    });
+
+    for (let i = 1; i <= WARRIOR.afterimageCount; i++) {
+      const ghost = this.add.image(w.x, w.y, 'sword')
+        .setOrigin(0.15, 0.5).setScale(2).setDepth(10)
+        .setRotation(startRot).setAlpha(0.5 - i * 0.15);
+      this.tweens.add({
+        targets: ghost,
+        rotation: endRot,
+        alpha: 0,
+        duration: WARRIOR.swordTweenMs + i * 40,
+        ease: 'Cubic.easeOut',
+        onComplete: () => ghost.destroy(),
+      });
+    }
+
+    const slash = this.add.image(player.x, player.y, 'slash')
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(20)
+      .setRotation(angle)
+      .setScale(0.6)
+      .setAlpha(0.95);
+    this.tweens.add({
+      targets: slash,
+      scale: 1.4,
+      alpha: 0,
+      duration: WARRIOR.slashDurationMs,
+      ease: 'Cubic.easeOut',
+      onComplete: () => slash.destroy(),
+    });
+  }
+
+  _triggerHitStop() {
+    this.time.timeScale = 0;
+    this.physics.world.isPaused = true;
+    setTimeout(() => {
+      this.time.timeScale = 1;
+      this.physics.world.isPaused = false;
+    }, WARRIOR.hitStopMs);
+  }
+
+  fireBulletTime() {
+    if (this.slowFactor < 1) return;
+    this.slowFactor = BULLET_TIME.slowFactor;
+
+    const vig = this.add.image(0, 0, 'bullet_time_vignette')
+      .setOrigin(0).setScrollFactor(0).setDepth(45).setAlpha(0);
+    this._bulletTimeVignette = vig;
+    this.tweens.add({
+      targets: vig,
+      alpha: BULLET_TIME.vignetteAlpha,
+      duration: BULLET_TIME.vignetteFadeInMs,
+      ease: 'Cubic.easeOut',
+    });
+
+    const fadeOutAt = BULLET_TIME.durationMs - BULLET_TIME.vignetteFadeOutMs;
+    this.time.delayedCall(fadeOutAt, () => {
+      if (!vig.scene) return;
+      this.tweens.add({
+        targets: vig, alpha: 0,
+        duration: BULLET_TIME.vignetteFadeOutMs,
+        ease: 'Cubic.easeIn',
+      });
+    });
+    this.time.delayedCall(BULLET_TIME.durationMs, () => {
+      this.slowFactor = 1;
+      vig.destroy();
+      if (this._bulletTimeVignette === vig) this._bulletTimeVignette = null;
+    });
+  }
+
   fireShockwave(x, y) {
     this.enemyBullets.getChildren().forEach(b => { if (b.active) b.kill(); });
     this.enemies.getChildren().forEach(e => {
@@ -194,6 +327,6 @@ export class GameScene extends Phaser.Scene {
   update(time, delta) {
     this.player.update(time, delta);
     this.waveManager.update(time, delta);
-    if (this.input.activePointer.isDown) this.tryShoot();
+    if (this.input.activePointer.isDown) this.player.tryAttack(this.time.now);
   }
 }
