@@ -42,10 +42,7 @@ export class Bullet extends Phaser.Physics.Arcade.Sprite {
     super.preUpdate(time, delta);
     if (!this.active) return;
     if (time - this.spawnedAt > BULLET.lifetimeMs) { this.kill(); return; }
-    const cam = this.scene.cameras.main;
-    const m = 40;
-    if (this.x < cam.worldView.x - m || this.x > cam.worldView.right + m ||
-        this.y < cam.worldView.y - m || this.y > cam.worldView.bottom + m) {
+    if (this.scene.world.isOutOfBounds(this.x, this.y, 40)) {
       this.kill();
     }
   }

@@ -21,9 +21,6 @@ export class EnemyBullet extends Phaser.Physics.Arcade.Sprite {
     super.preUpdate(time, delta);
     if (!this.active) return;
     if (time - this.spawnedAt > 3000) { this.kill(); return; }
-    const cam = this.scene.cameras.main;
-    const m = 40;
-    if (this.x < cam.worldView.x - m || this.x > cam.worldView.right + m ||
-        this.y < cam.worldView.y - m || this.y > cam.worldView.bottom + m) this.kill();
+    if (this.scene.world.isOutOfBounds(this.x, this.y, 40)) this.kill();
   }
 }

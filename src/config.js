@@ -1,7 +1,12 @@
 export const GAME = {
-  width: 960,
-  height: 600,
+  width: 1280,
+  height: 720,
   bg: 0x15151f,
+};
+
+export const WORLD = {
+  width: 3840,
+  height: 3600,
 };
 
 export const PLAYER = {

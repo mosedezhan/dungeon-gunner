@@ -1,19 +1,21 @@
-import { GAME, SKILL } from '../config.js';
+import { GAME, SKILL, WORLD } from '../config.js';
 import { Player } from '../entities/Player.js';
 import { Bullet } from '../entities/Bullet.js';
 import { EnemyBullet } from '../entities/EnemyBullet.js';
 import { XPOrb } from '../entities/XPOrb.js';
 import { SkillOrb } from '../entities/SkillOrb.js';
 import { WaveManager } from '../systems/WaveManager.js';
+import { World } from '../systems/World.js';
 
 export class GameScene extends Phaser.Scene {
   constructor() { super('GameScene'); }
 
   create() {
-    this.physics.world.setBounds(0, 0, GAME.width, GAME.height);
+    this.world = new World(this);
+    this.world.setupPhysicsWorld();
     this.drawFloor();
 
-    this.player = new Player(this, GAME.width / 2, GAME.height / 2);
+    this.player = new Player(this, WORLD.width / 2, WORLD.height / 2);
 
     this.bullets      = this.physics.add.group({ classType: Bullet,      runChildUpdate: true, maxSize: 200 });
     this.enemyBullets = this.physics.add.group({ classType: EnemyBullet, runChildUpdate: true, maxSize: 200 });
@@ -29,6 +31,10 @@ export class GameScene extends Phaser.Scene {
 
     this.kills = 0;
     this.waveManager = new WaveManager(this);
+
+    // Camera setup: smooth follow with boundary constraint
+    this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
+    this.cameras.main.setBounds(0, 0, WORLD.width, WORLD.height);
 
     this.input.keyboard.on('keydown-ESC', () => this.pauseGame());
     this.input.keyboard.on('keydown-P',   () => this.pauseGame());
@@ -49,16 +55,18 @@ export class GameScene extends Phaser.Scene {
   }
 
   drawFloor() {
-    const g = this.add.graphics().setDepth(-10);
-    g.fillStyle(0x15151f, 1).fillRect(0, 0, GAME.width, GAME.height);
+    // Generate a 32x32 tile texture matching the original grid pattern
+    const g = this.add.graphics().setVisible(false);
+    g.fillStyle(0x15151f, 1).fillRect(0, 0, 32, 32);
     g.lineStyle(1, 0x22222e, 1);
-    const step = 32;
-    for (let x = 0; x <= GAME.width; x += step) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, GAME.height); g.strokePath(); }
-    for (let y = 0; y <= GAME.height; y += step) { g.beginPath(); g.moveTo(0, y); g.lineTo(GAME.width, y); g.strokePath(); }
-    g.fillStyle(0x2a2a3a, 1);
-    for (let x = 0; x <= GAME.width; x += step)
-      for (let y = 0; y <= GAME.height; y += step)
-        g.fillRect(x - 1, y - 1, 2, 2);
+    g.strokeRect(0, 0, 32, 32);
+    g.fillStyle(0x2a2a3a, 1).fillRect(15, 15, 2, 2);
+    g.generateTexture('floor_tile', 32, 32);
+    g.destroy();
+
+    // Use tileSprite to cover the entire world
+    this.add.tileSprite(WORLD.width / 2, WORLD.height / 2, WORLD.width, WORLD.height, 'floor_tile')
+      .setDepth(-10);
   }
 
   tryShoot() {

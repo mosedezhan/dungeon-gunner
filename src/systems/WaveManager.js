@@ -45,15 +45,33 @@ export class WaveManager {
   }
 
   spawn() {
-    const cam = this.scene.cameras.main;
+    const ring = this.scene.world.getSpawnRing(this.scene.cameras.main);
     const pad = 50;
-    const w = cam.worldView.width, h = cam.worldView.height;
     const edge = Phaser.Math.Between(0, 3);
     let x, y;
-    if (edge === 0)      { x = Phaser.Math.Between(-pad, w + pad); y = -pad; }
-    else if (edge === 1) { x = w + pad; y = Phaser.Math.Between(-pad, h + pad); }
-    else if (edge === 2) { x = Phaser.Math.Between(-pad, w + pad); y = h + pad; }
-    else                 { x = -pad; y = Phaser.Math.Between(-pad, h + pad); }
+
+    // Generate spawn points outside camera view, inside world bounds
+    if (edge === 0) {
+      // Top edge
+      x = Phaser.Math.Between(ring.viewX - pad, ring.viewRight + pad);
+      y = ring.viewY - pad;
+    } else if (edge === 1) {
+      // Right edge
+      x = ring.viewRight + pad;
+      y = Phaser.Math.Between(ring.viewY - pad, ring.viewBottom + pad);
+    } else if (edge === 2) {
+      // Bottom edge
+      x = Phaser.Math.Between(ring.viewX - pad, ring.viewRight + pad);
+      y = ring.viewBottom + pad;
+    } else {
+      // Left edge
+      x = ring.viewX - pad;
+      y = Phaser.Math.Between(ring.viewY - pad, ring.viewBottom + pad);
+    }
+
+    // Clamp to world bounds (intersection with world boundary)
+    x = Phaser.Math.Clamp(x, -pad, ring.worldW + pad);
+    y = Phaser.Math.Clamp(y, -pad, ring.worldH + pad);
 
     const mix = this.mixForWave();
     const EnemyClass = Phaser.Utils.Array.GetRandom(mix);
