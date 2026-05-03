@@ -10,7 +10,7 @@ export const WORLD = {
 };
 
 export const PLAYER = {
-  maxHp: 100,
+  maxHp: 100000,
   moveSpeed: 180,
   damage: 10,
   fireRateMs: 280,
@@ -19,7 +19,7 @@ export const PLAYER = {
   multishot: 1,
   regen: 0,
   invulnMs: 400,
-  skillChargesMax: 1,
+  skillChargesMax: 10,
 };
 
 export const BULLET = {
@@ -38,6 +38,11 @@ export const ENEMY = {
     hp: 100, speed: 38, contactDamage: 14, radius: 14, xp: 8, tint: 0xc8a878, bodyTint: 0x4a3218,
     slamTriggerRange: 130, windUpMs: 400, swingMs: 100, impactMs: 100, recoveryMs: 400,
     slamCooldownMs: 3000, slamRadius: 90, slamDamage: 25,
+  },
+  bomber: {
+    hp: 18, speed: 55, contactDamage: 8, radius: 7, xp: 4, tint: 0xff6633, bodyTint: 0xaa2211,
+    triggerRange: 180, windUpMs: 300, jumpMs: 150, leapSpeed: 300,
+    blastRadius: 75, blastDamage: 25, cooldownMs: 2000,
   },
 };
 
@@ -82,9 +87,9 @@ export const CLASSES = {
     skill: 'bullet_time',
     color: 0xc8442a,
     baseStats: {
-      maxHp: 120,
+      maxHp: 120000,
       moveSpeed: 200,
-      damage: 18,
+      damage: 1800,
       attackRateMs: 380,
       swingRange: 80,
       swingArc: Math.PI / 2,

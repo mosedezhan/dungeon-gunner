@@ -35,7 +35,10 @@
       "Bash(where python *)",
       "Bash(/c/Users/Admin/AppData/Local/Programs/Python/Python312/python.exe *)",
       "Bash(cat openspec/changes)",
-      "Bash(ls openspec/)"
+      "Bash(ls openspec/)",
+      "Bash(npx openspec *)",
+      "Bash(ls openspec/specs/enemy-bomber/)",
+      "Bash(cat openspec/specs/enemy-bomber/spec.md)"
     ]
   }
 }

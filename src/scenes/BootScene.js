@@ -242,6 +242,37 @@ const GIANT_B = [
   '..OO....OO..',
 ];
 
+// Bomber: small round bomb body, red-orange
+const BOMBER_PALETTE = {
+  R: 0xff6633, r: 0xcc3311, D: 0x661108, E: 0xffee44, F: 0xffaa22,
+  W: 0xffffff, O: 0x0a0402,
+};
+
+const BOMBER_A = [
+  '...OOOOO...',
+  '..ORrrrRO..',
+  '.ORRRRRRRO.',
+  '.ORrEWErRO.',
+  '.ORRRRRRRO.',
+  '.ORrFFFFRO.',
+  '.ORrrrrrRO.',
+  '..ORRRRRO..',
+  '..ORO.ORO..',
+  '..OO...OO..',
+];
+const BOMBER_B = [
+  '...OOOOO...',
+  '..ORrrrRO..',
+  '.ORRRRRRRO.',
+  '.ORrEWErRO.',
+  '.ORRRRRRRO.',
+  '.ORrFFFFRO.',
+  '.ORrrrrrRO.',
+  '..ORRRRRO..',
+  '...OO.OO...',
+  '...O...O...',
+];
+
 export class BootScene extends Phaser.Scene {
   constructor() { super('BootScene'); }
 
@@ -272,6 +303,8 @@ export class BootScene extends Phaser.Scene {
     makeTex(this, 'shooter_b', SHOOTER_B, SHOOTER_PALETTE);
     makeTex(this, 'giant_a', GIANT_A, GIANT_PALETTE);
     makeTex(this, 'giant_b', GIANT_B, GIANT_PALETTE);
+    makeTex(this, 'bomber_a', BOMBER_A, BOMBER_PALETTE);
+    makeTex(this, 'bomber_b', BOMBER_B, BOMBER_PALETTE);
 
     // Gun: small horizontal sprite (barrel points right at angle 0)
     const gun = this.add.graphics().setVisible(false);
@@ -445,6 +478,16 @@ export class BootScene extends Phaser.Scene {
     this.anims.create({
       key: 'giant_die',
       frames: [{ key: 'giant_a' }, { key: 'giant_b' }],
+      frameRate: 8, repeat: 0,
+    });
+    this.anims.create({
+      key: 'bomber_walk',
+      frames: [{ key: 'bomber_a' }, { key: 'bomber_b' }],
+      frameRate: 8, repeat: -1,
+    });
+    this.anims.create({
+      key: 'bomber_die',
+      frames: [{ key: 'bomber_a' }, { key: 'bomber_b' }],
       frameRate: 8, repeat: 0,
     });
 
