@@ -7,6 +7,7 @@ import { HUDScene } from './scenes/HUDScene.js';
 import { UpgradeScene } from './scenes/UpgradeScene.js';
 import { PauseScene } from './scenes/PauseScene.js';
 import { GameOverScene } from './scenes/GameOverScene.js';
+import { DebugScene } from './scenes/DebugScene.js';
 
 const config = {
   type: Phaser.AUTO,
@@ -20,7 +21,7 @@ const config = {
     default: 'arcade',
     arcade: { debug: false },
   },
-  scene: [BootScene, MenuScene, ClassSelectScene, GameScene, HUDScene, UpgradeScene, PauseScene, GameOverScene],
+  scene: [BootScene, MenuScene, ClassSelectScene, GameScene, HUDScene, UpgradeScene, PauseScene, GameOverScene, DebugScene],
 };
 
 new Phaser.Game(config);

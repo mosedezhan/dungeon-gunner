@@ -45,16 +45,28 @@ export class GameScene extends Phaser.Scene {
       if (!this.scene.isActive() || this.player.dead) return;
       this.player.triggerSkill();
     });
+    this.input.keyboard.on('keydown-F1', (e) => { e.preventDefault(); this.openDebug(); });
 
     this.scene.launch('HUDScene');
+
+    if (data?.debug) {
+      this.waveManager.spawnEnabled = false;
+    }
   }
 
   pauseGame() {
     if (!this.scene.isActive() || this.player.dead) return;
-    // Don't pause over upgrade screen
-    if (this.scene.isActive('UpgradeScene')) return;
+    // Don't pause over upgrade or debug screen
+    if (this.scene.isActive('UpgradeScene') || this.scene.isActive('DebugScene')) return;
     this.scene.pause();
     this.scene.launch('PauseScene');
+  }
+
+  openDebug() {
+    if (!this.scene.isActive() || this.player.dead) return;
+    if (this.scene.isActive('UpgradeScene') || this.scene.isActive('PauseScene')) return;
+    this.scene.pause();
+    this.scene.launch('DebugScene');
   }
 
   drawFloor() {

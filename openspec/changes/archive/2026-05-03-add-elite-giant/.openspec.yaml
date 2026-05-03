@@ -1,0 +1,10 @@
+name: add-elite-giant
+schema: spec-driven
+status: ready
+artifacts:
+  proposal:
+    status: done
+  design:
+    status: done
+  tasks:
+    status: done

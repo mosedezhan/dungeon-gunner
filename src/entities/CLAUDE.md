@@ -36,6 +36,7 @@
 4. `preUpdate` 加 super + active guard
 5. 在 `BootScene` 程序化生成纹理 + 注册动画 key
 6. **双人协作模式下**：先开 OpenSpec change 固定 `id / texture_keys / anim_keys / config_block`（见下节）
+7. 注册到 `src/debug/registry.js` 的 `DEBUG_SPAWNABLE` 对象
 
 ## Enemy 子类的命名空间约定（双人协作）
 

@@ -424,6 +424,20 @@ export class BootScene extends Phaser.Scene {
     dustG.generateTexture('slam_dust', 12, 12);
     dustG.destroy();
 
+    // Elite eye: bright red glow dot for elite enemy eyes
+    const eyeG = this.add.graphics().setVisible(false);
+    eyeG.fillStyle(0xff2222, 1); eyeG.fillCircle(3, 2, 2);
+    eyeG.fillStyle(0xff6644, 0.7); eyeG.fillCircle(3, 2, 3);
+    eyeG.generateTexture('elite_eye', 6, 4);
+    eyeG.destroy();
+
+    // Elite smoke: dark gray semi-transparent puff
+    const smokeG = this.add.graphics().setVisible(false);
+    smokeG.fillStyle(0x222222, 0.5); smokeG.fillCircle(5, 5, 5);
+    smokeG.fillStyle(0x444444, 0.3); smokeG.fillCircle(5, 5, 3);
+    smokeG.generateTexture('elite_smoke', 10, 10);
+    smokeG.destroy();
+
     // Create animations
     this.anims.create({
       key: 'player_idle',
@@ -491,6 +505,11 @@ export class BootScene extends Phaser.Scene {
       frameRate: 8, repeat: 0,
     });
 
-    this.scene.start('MenuScene');
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('debug')) {
+      this.scene.start('GameScene', { class: 'mage', debug: true });
+    } else {
+      this.scene.start('MenuScene');
+    }
   }
 }

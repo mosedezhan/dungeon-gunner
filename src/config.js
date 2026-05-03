@@ -44,6 +44,21 @@ export const ENEMY = {
     triggerRange: 180, windUpMs: 300, jumpMs: 150, leapSpeed: 300,
     blastRadius: 75, blastDamage: 25, cooldownMs: 2000,
   },
+  elite_chaser: {
+    hp: 200, speed: 70, contactDamage: 15, radius: 10, xp: 5,
+    berserkSpeed: 140, berserkThreshold: 0.6, berserkTint: 0xff3333,
+  },
+  elite_shooter: {
+    hp: 180, speed: 55, contactDamage: 10, radius: 12, xp: 7,
+    preferredRange: 260, fireRateMs: 1600, bulletSpeed: 260, bulletDamage: 12,
+    spreadAngle: 0.2,
+  },
+  elite_giant: {
+    hp: 300, speed: 38, contactDamage: 18, radius: 16, xp: 12,
+    slamTriggerRange: 130, windUpMs: 400, swingMs: 100, impactMs: 100, recoveryMs: 400,
+    slamCooldownMs: 3000, slamRadius: 100, slamDamage: 30,
+    dashTriggerRange: 260, dashSpeed: 170, dashDurationMs: 2000, dashCooldownMs: 5000,
+  },
 };
 
 export const XP = {
@@ -89,7 +104,7 @@ export const CLASSES = {
     baseStats: {
       maxHp: 120000,
       moveSpeed: 200,
-      damage: 1800,
+      damage: 50,
       attackRateMs: 380,
       swingRange: 80,
       swingArc: Math.PI / 2,

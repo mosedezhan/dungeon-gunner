@@ -38,7 +38,14 @@
       "Bash(ls openspec/)",
       "Bash(npx openspec *)",
       "Bash(ls openspec/specs/enemy-bomber/)",
-      "Bash(cat openspec/specs/enemy-bomber/spec.md)"
+      "Bash(cat openspec/specs/enemy-bomber/spec.md)",
+      "Bash(mkdir -p openspec/changes/archive)",
+      "Bash(ls openspec/changes/archive/2026-05-03-add-elite-chaser-shooter)",
+      "Bash(which openspec *)",
+      "Bash(where openspec *)",
+      "Bash(ls node_modules/.bin/openspec*)",
+      "Bash(ls package.json)",
+      "Bash(cat package.json)"
     ]
   }
 }
