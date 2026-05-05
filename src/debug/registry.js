@@ -9,13 +9,13 @@ import { EliteShooter } from '../entities/enemies/EliteShooter.js';
 import { EliteGiant } from '../entities/enemies/EliteGiant.js';
 
 export const DEBUG_SPAWNABLE = {
-  '1: Chaser': Chaser,
-  '2: Rusher': Rusher,
-  '3: Shooter': Shooter,
-  '4: Giant': Giant,
-  '5: Bomber': Bomber,
-  '6: Mimic': Mimic,
-  '7: Elite Chaser': EliteChaser,
-  '8: Elite Shooter': EliteShooter,
-  '9: Elite Giant': EliteGiant,
+  '1: 追击者': Chaser,
+  '2: 冲锋者': Rusher,
+  '3: 射手': Shooter,
+  '4: 巨人': Giant,
+  '5: 自爆者': Bomber,
+  '6: 宝箱怪': Mimic,
+  '7: 精英追击者': EliteChaser,
+  '8: 精英射手': EliteShooter,
+  '9: 精英巨人': EliteGiant,
 };

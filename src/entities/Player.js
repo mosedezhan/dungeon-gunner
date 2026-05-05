@@ -1,4 +1,4 @@
-import { PLAYER, CLASSES } from '../config.js';
+import { PLAYER, CLASSES, TIME_STOP } from '../config.js';
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y, classId = 'player') {
@@ -29,6 +29,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.regenAccum = 0;
     this.dead = false;
     this.skillCharges = 0;
+    this.timeStopReadyAt = 0;
 
     const weaponKey = classId === 'warrior' ? 'sword' : 'gun';
     this.weapon = scene.add.sprite(x, y, weaponKey).setOrigin(0.15, 0.5).setDepth(11).setScale(2);
@@ -169,9 +170,23 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   triggerSkill() {
-    if (this.dead || this.skillCharges <= 0) return false;
-    this.skillCharges -= 1;
-    this.scene.useSkill?.(this);
+    if (this.dead) return false;
+
+    // Time Stop is on a real-time cooldown, decoupled from skillCharges.
+    if (this.stats.hasTimeStop) {
+      const now = this.scene.time.now;
+      if (now < this.timeStopReadyAt) return false;
+      const fired = this.scene.useSkill?.(this);
+      if (fired === false) return false;
+      this.timeStopReadyAt = now + TIME_STOP.cooldownMs;
+      return true;
+    }
+
+    const cost = this.stats.skillCost ?? 1;
+    if (this.skillCharges < cost) return false;
+    const fired = this.scene.useSkill?.(this);
+    if (fired === false) return false;
+    this.skillCharges -= cost;
     return true;
   }
 

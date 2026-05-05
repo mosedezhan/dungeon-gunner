@@ -67,10 +67,17 @@ export class HUDScene extends Phaser.Scene {
 
     const w = gs.waveManager;
     const secLeft = Math.ceil(w.timeLeftMs / 1000);
-    this.waveText.setText(`WAVE ${w.wave}   ${secLeft}s`);
+    this.waveText.setText(`第 ${w.wave} 波   ${secLeft} 秒`);
 
     const dmg = Math.round(p.stats.damage);
     const rate = (1000 / p.stats.fireRateMs).toFixed(1);
-    this.statsText.setText(`kills ${gs.kills}\ndmg ${dmg}   ${rate}/s\npierce ${p.stats.pierce}   x${p.stats.multishot}\nskill ${p.skillCharges}/${p.stats.skillChargesMax}`);
+    let skillLine;
+    if (p.stats.hasTimeStop) {
+      const cd = Math.max(0, ((p.timeStopReadyAt ?? 0) - gs.time.now) / 1000);
+      skillLine = cd <= 0 ? '时停就绪' : `时停 ${cd.toFixed(1)} 秒`;
+    } else {
+      skillLine = `技能 ${p.skillCharges}/${p.stats.skillChargesMax}`;
+    }
+    this.statsText.setText(`击杀 ${gs.kills}\n伤害 ${dmg}   ${rate}/秒\n穿透 ${p.stats.pierce}   x${p.stats.multishot}\n${skillLine}`);
   }
 }

@@ -8,7 +8,7 @@ export class ClassSelectScene extends Phaser.Scene {
     const cy = GAME.height / 2;
 
     // Title
-    this.add.text(cx, cy - 180, 'SELECT YOUR CLASS', {
+    this.add.text(cx, cy - 180, '选择你的职业', {
       fontFamily: 'Courier New', fontSize: '32px', fontStyle: 'bold',
       color: '#ffe14a', stroke: '#2a1a00', strokeThickness: 4,
     }).setOrigin(0.5);
@@ -32,7 +32,7 @@ export class ClassSelectScene extends Phaser.Scene {
     this.selectCard(0);
 
     // Controls hint
-    this.add.text(cx, cy + 180, '← →  Select    SPACE / CLICK  Confirm    ESC  Back', {
+    this.add.text(cx, cy + 180, '← → 选择    空格 / 点击 确认    ESC 返回', {
       fontFamily: 'Courier New', fontSize: '16px', color: '#9aa',
     }).setOrigin(0.5);
 

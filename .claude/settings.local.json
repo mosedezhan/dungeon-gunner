@@ -45,7 +45,17 @@
       "Bash(where openspec *)",
       "Bash(ls node_modules/.bin/openspec*)",
       "Bash(ls package.json)",
-      "Bash(cat package.json)"
+      "Bash(cat package.json)",
+      "Bash(git status *)",
+      "PowerShell(openspec list *)",
+      "PowerShell(npx openspec list --json)",
+      "Bash(node --check src/config.js)",
+      "Bash(node --check src/systems/Upgrades.js)",
+      "Bash(node --check src/entities/Player.js)",
+      "Bash(node --check src/scenes/GameScene.js)",
+      "Bash(node --check src/scenes/UpgradeScene.js)",
+      "Bash(node --input-type=module --check)",
+      "Bash(node *)"
     ]
   }
 }

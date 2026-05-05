@@ -7,7 +7,7 @@ export class PauseScene extends Phaser.Scene {
     this.add.rectangle(0, 0, GAME.width, GAME.height, 0x000000, 0.65)
       .setOrigin(0).setInteractive();
 
-    const title = this.add.text(GAME.width / 2, GAME.height / 2 - 80, 'PAUSED', {
+    const title = this.add.text(GAME.width / 2, GAME.height / 2 - 80, '已暂停', {
       fontFamily: 'Courier New', fontSize: '56px', fontStyle: 'bold',
       color: '#88eeff', stroke: '#002033', strokeThickness: 6,
     }).setOrigin(0.5);
@@ -16,7 +16,7 @@ export class PauseScene extends Phaser.Scene {
       duration: 1200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
     });
 
-    const resume = this.add.text(GAME.width / 2, GAME.height / 2 + 10, '▶ [ESC]  Resume', {
+    const resume = this.add.text(GAME.width / 2, GAME.height / 2 + 10, '▶ [ESC]  继续', {
       fontFamily: 'Courier New', fontSize: '22px', fontStyle: 'bold',
       color: '#fff', stroke: '#000', strokeThickness: 3,
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
@@ -24,7 +24,7 @@ export class PauseScene extends Phaser.Scene {
     resume.on('pointerout',  () => resume.setColor('#ffffff'));
     resume.on('pointerdown', () => this.resumeGame());
 
-    const quit = this.add.text(GAME.width / 2, GAME.height / 2 + 60, '[Q]  Main Menu', {
+    const quit = this.add.text(GAME.width / 2, GAME.height / 2 + 60, '[Q]  主菜单', {
       fontFamily: 'Courier New', fontSize: '18px', color: '#aac',
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     quit.on('pointerover', () => quit.setColor('#ff6a6a'));
