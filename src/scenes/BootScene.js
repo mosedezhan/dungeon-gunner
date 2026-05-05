@@ -336,6 +336,11 @@ const MIMIC_REVEALED_B = [
 export class BootScene extends Phaser.Scene {
   constructor() { super('BootScene'); }
 
+  preload() {
+    this.load.image('map_1', 'assets/map/map_1.png');
+    this.load.image('map_2', 'assets/map/map_2.png');
+  }
+
   create() {
     // Characters
     makeTex(this, 'player_idle_a', PLAYER_IDLE_A, PLAYER_PALETTE);
@@ -501,6 +506,60 @@ export class BootScene extends Phaser.Scene {
     smokeG.fillStyle(0x444444, 0.3); smokeG.fillCircle(5, 5, 3);
     smokeG.generateTexture('elite_smoke', 10, 10);
     smokeG.destroy();
+
+    // Time-stop clock face: dark bronze rim, ivory dial, roman markers, no hand
+    const CLOCK = 96;
+    const cg = this.add.graphics().setVisible(false);
+    const cx = CLOCK / 2, cy = CLOCK / 2;
+    cg.fillStyle(0x1a0a08, 1); cg.fillCircle(cx, cy, 46);
+    cg.fillStyle(0x886622, 1); cg.fillCircle(cx, cy, 44);
+    cg.fillStyle(0xddc88a, 1); cg.fillCircle(cx, cy, 40);
+    cg.fillStyle(0xf2e2b0, 1); cg.fillCircle(cx, cy, 38);
+    // 12 hour ticks
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * Math.PI * 2 - Math.PI / 2;
+      const major = i % 3 === 0;
+      const r1 = major ? 30 : 33;
+      const r2 = 38;
+      const x1 = cx + Math.cos(a) * r1, y1 = cy + Math.sin(a) * r1;
+      const x2 = cx + Math.cos(a) * r2, y2 = cy + Math.sin(a) * r2;
+      cg.lineStyle(major ? 3 : 1, 0x1a0a08, 1);
+      cg.beginPath(); cg.moveTo(x1, y1); cg.lineTo(x2, y2); cg.strokePath();
+    }
+    // Center pin
+    cg.fillStyle(0x1a0a08, 1); cg.fillCircle(cx, cy, 3);
+    cg.generateTexture('time_stop_clock', CLOCK, CLOCK);
+    cg.destroy();
+
+    // Time-stop second hand: thin tapered needle pointing up at rotation 0
+    const HAND_W = 8, HAND_H = 40;
+    const hg = this.add.graphics().setVisible(false);
+    hg.fillStyle(0x1a0a08, 1); hg.fillRect(HAND_W / 2 - 1, 2, 2, HAND_H - 6);
+    hg.fillStyle(0xffffff, 1); hg.fillRect(HAND_W / 2 - 1, 2, 2, 6);
+    hg.fillStyle(0x441100, 1); hg.fillRect(HAND_W / 2 - 2, HAND_H - 6, 4, 6);
+    hg.generateTexture('time_stop_hand', HAND_W, HAND_H);
+    hg.destroy();
+
+    // Time-stop shards: 6 angular triangle pieces in deep purple/bronze
+    const SHARD = 32;
+    const shardPalettes = [0x886622, 0xddc88a, 0xaa4488, 0x442266, 0xcc8844, 0x6622aa];
+    for (let i = 0; i < 6; i++) {
+      const sg = this.add.graphics().setVisible(false);
+      sg.fillStyle(shardPalettes[i], 1);
+      sg.beginPath();
+      sg.moveTo(SHARD / 2, 2);
+      sg.lineTo(SHARD - 2, SHARD - 4);
+      sg.lineTo(4, SHARD - 8);
+      sg.closePath();
+      sg.fillPath();
+      sg.lineStyle(1, 0xffffff, 0.6);
+      sg.beginPath();
+      sg.moveTo(SHARD / 2, 2);
+      sg.lineTo(SHARD - 2, SHARD - 4);
+      sg.strokePath();
+      sg.generateTexture(`time_stop_shard_${i}`, SHARD, SHARD);
+      sg.destroy();
+    }
 
     // Create animations
     this.anims.create({

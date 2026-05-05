@@ -36,12 +36,12 @@ export class DebugScene extends Phaser.Scene {
     let y = 60;
 
     // Title
-    this.add.text(panelX, y, 'DEBUG PANEL', STYLE_HEAD)
+    this.add.text(panelX, y, '调试面板', STYLE_HEAD)
       .setOrigin(0.5).setScrollFactor(0).setDepth(1);
     y += 40;
 
     // Spawn section
-    this.add.text(panelX, y, '── Spawn at Cursor ──', STYLE_SECTION)
+    this.add.text(panelX, y, '── 在光标处生成 ──', STYLE_SECTION)
       .setOrigin(0.5).setScrollFactor(0).setDepth(1);
     y += 30;
 
@@ -51,26 +51,26 @@ export class DebugScene extends Phaser.Scene {
     }
 
     y += 15;
-    this.add.text(panelX, y, '── Actions ──', STYLE_SECTION)
+    this.add.text(panelX, y, '── 操作 ──', STYLE_SECTION)
       .setOrigin(0.5).setScrollFactor(0).setDepth(1);
     y += 30;
 
-    this._godText = this._addButton(panelX, y, '[W] God Mode: OFF', () => this._toggleGod());
+    this._godText = this._addButton(panelX, y, '[W] 上帝模式: 关闭', () => this._toggleGod());
     y += 28;
 
-    this._addButton(panelX, y, '[E] Kill All Enemies', () => this._killAll());
+    this._addButton(panelX, y, '[E] 消灭所有敌人', () => this._killAll());
     y += 28;
 
-    this._addButton(panelX, y, '[Q] +1 Skill Charge', () => this._addCharge());
+    this._addButton(panelX, y, '[Q] +1 技能充能', () => this._addCharge());
     y += 28;
 
-    this._addButton(panelX, y, '[R] Skip to Wave 20', () => this._skipWave());
+    this._addButton(panelX, y, '[R] 跳至指定波次', () => this._skipWave());
     y += 28;
 
-    this._spawnText = this._addButton(panelX, y, '[T] Auto Spawn: ON', () => this._toggleSpawn());
+    this._spawnText = this._addButton(panelX, y, '[T] 自动生成: 开启', () => this._toggleSpawn());
     y += 40;
 
-    this.add.text(panelX, y, '[ESC / F1] Close', STYLE_SECTION)
+    this.add.text(panelX, y, '[ESC / F1] 关闭', STYLE_SECTION)
       .setOrigin(0.5).setScrollFactor(0).setDepth(1);
 
     // Keyboard
@@ -126,10 +126,10 @@ export class DebugScene extends Phaser.Scene {
     const gs = this.gs;
     if (this.godMode) {
       gs.player.invulUntil = Infinity;
-      this._godText.setText('[W] God Mode: ON').setStyle(STYLE_HIGHLIGHT);
+      this._godText.setText('[W] 上帝模式: 开启').setStyle(STYLE_HIGHLIGHT);
     } else {
       gs.player.invulUntil = 0;
-      this._godText.setText('[W] God Mode: OFF').setStyle(STYLE);
+      this._godText.setText('[W] 上帝模式: 关闭').setStyle(STYLE);
     }
   }
 
@@ -145,16 +145,20 @@ export class DebugScene extends Phaser.Scene {
   }
 
   _skipWave() {
-    this.gs.waveManager.startWave(20);
+    const input = window.prompt('跳至第几波？', String(this.gs.waveManager.wave));
+    if (input === null) return;
+    const n = parseInt(input, 10);
+    if (isNaN(n) || n < 1) return;
+    this.gs.waveManager.startWave(n);
   }
 
   _toggleSpawn() {
     const wm = this.gs.waveManager;
     wm.spawnEnabled = !wm.spawnEnabled;
     if (wm.spawnEnabled) {
-      this._spawnText.setText('[T] Auto Spawn: ON').setStyle(STYLE);
+      this._spawnText.setText('[T] 自动生成: 开启').setStyle(STYLE);
     } else {
-      this._spawnText.setText('[T] Auto Spawn: OFF').setStyle(STYLE_HIGHLIGHT);
+      this._spawnText.setText('[T] 自动生成: 关闭').setStyle(STYLE_HIGHLIGHT);
     }
   }
 

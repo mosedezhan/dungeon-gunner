@@ -13,36 +13,40 @@ export class WaveManager {
   constructor(scene) {
     this.scene = scene;
     this.wave = 0;
-    this.waveStartAt = 0;
-    this.nextSpawnAt = 0;
+    this.waveElapsed = 0;
+    this.spawnElapsed = 0;
     this.spawnInterval = WAVE.startSpawnMs;
-    this.nextEliteAt = Infinity;
+    this.eliteElapsed = 0;
+    this.eliteThreshold = Infinity;
     this.eliteInterval = 15000;
     this.spawnEnabled = true;
     this._mimicScheduled = false;
-    this._mimicSpawnAt = 0;
+    this._mimicElapsed = 0;
+    this._mimicDelay = 0;
     this.startWave(1);
   }
 
   startWave(n) {
     this.wave = n;
-    this.waveStartAt = this.scene.time.now;
+    this.waveElapsed = 0;
+    this.spawnElapsed = 0;
     this.spawnInterval = Math.max(WAVE.minSpawnMs, WAVE.startSpawnMs - (n - 1) * 90);
-    this.nextSpawnAt = this.scene.time.now + 500;
-    if (n >= 10 && this.nextEliteAt === Infinity) {
-      this.nextEliteAt = this.scene.time.now + 5000;
+    if (n === WORLD.mapSwitchWave) this.scene.triggerMapTransition();
+    if (n >= 10 && this.eliteThreshold === Infinity) {
+      this.eliteThreshold = 5000;
+      this.eliteElapsed = 0;
     }
     this._mimicScheduled = false;
     if (n >= 4 && Math.random() < 0.15) {
       this._mimicScheduled = true;
-      const delay = Phaser.Math.Between(3000, 6000);
-      this._mimicSpawnAt = this.scene.time.now + delay;
+      this._mimicDelay = Phaser.Math.Between(3000, 6000);
+      this._mimicElapsed = 0;
     }
     this.scene.onWaveStart?.(n);
   }
 
   get timeLeftMs() {
-    return Math.max(0, WAVE.durationMs - (this.scene.time.now - this.waveStartAt));
+    return Math.max(0, WAVE.durationMs - this.waveElapsed);
   }
 
   mixForWave() {
@@ -62,19 +66,31 @@ export class WaveManager {
   }
 
   update(time, delta) {
-    if (this.spawnEnabled && time - this.waveStartAt >= WAVE.durationMs) this.startWave(this.wave + 1);
-    if (this.spawnEnabled && time >= this.nextSpawnAt) {
+    if (!this.spawnEnabled) return;
+
+    this.waveElapsed += delta;
+    this.spawnElapsed += delta;
+
+    if (this.waveElapsed >= WAVE.durationMs) { this.startWave(this.wave + 1); return; }
+    if (this.spawnElapsed >= this.spawnInterval) {
       this.spawn();
-      this.nextSpawnAt = time + this.spawnInterval;
+      this.spawnElapsed = 0;
     }
-    if (this.spawnEnabled && this.wave >= 10 && time >= this.nextEliteAt) {
-      this.spawnElite();
-      const count = this.wave >= 13 ? 2 : 1;
-      this.nextEliteAt = time + this.eliteInterval / count;
+    if (this.wave >= 10 && this.eliteThreshold < Infinity) {
+      this.eliteElapsed += delta;
+      if (this.eliteElapsed >= this.eliteThreshold) {
+        this.spawnElite();
+        this.eliteElapsed = 0;
+        const count = this.wave >= 13 ? 2 : 1;
+        this.eliteThreshold = this.eliteInterval / count;
+      }
     }
-    if (this.spawnEnabled && this._mimicScheduled && time >= this._mimicSpawnAt) {
-      this._mimicScheduled = false;
-      this.spawnMimic();
+    if (this._mimicScheduled) {
+      this._mimicElapsed += delta;
+      if (this._mimicElapsed >= this._mimicDelay) {
+        this._mimicScheduled = false;
+        this.spawnMimic();
+      }
     }
   }
 

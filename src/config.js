@@ -7,6 +7,9 @@ export const GAME = {
 export const WORLD = {
   width: 3840,
   height: 3600,
+  tileScale: 0.5,
+  mapSwitchWave: 10,
+  mapTransitionDurationMs: 900,
 };
 
 export const PLAYER = {
@@ -95,7 +98,7 @@ export const CLASSES = {
   mage: {
     id: 'mage',
     name: '法师',
-    description: '精通弹开技能',
+    description: '精通冲击波技能',
     textureKey: 'mage',
     skill: 'shockwave',
     color: 0x4488ff,
@@ -137,27 +140,74 @@ export const BULLET_TIME = {
   vignetteFadeInMs: 150,
   vignetteFadeOutMs: 300,
   vignetteAlpha: 0.45,
+  // Per-level upgrades (T0 = base, T2 = max)
+  durationLevels: [2500, 3500, 4500],
+  slowFactorLevels: [0.30, 0.20, 0.10],
+};
+
+export const TIME_STOP = {
+  cooldownMs: 15000,
+  durationMs: 5000,
+  invulnMs: 5000,
+  enemyTint: 0x555555,
+  bulletTint: 0x444444,
+  overlayColor: 0x1a0a2a,
+  overlayAlpha: 0.30,
+  flashAlpha: 0.85,
+  flashDurationMs: 220,
+  shakeMs: 220,
+  shakeIntensity: 0.012,
+  // Clock face UI (top-right)
+  clockX: 1180,
+  clockY: 100,
+  clockScale: 1.6,
+  handColors: [0xffd84a, 0xff9a2a, 0xff3322],
+  // Shatter
+  shardCount: 6,
+  shardSpeedMin: 180,
+  shardSpeedMax: 360,
+  shardLifetimeMs: 700,
 };
 
 export const UPGRADES = [
-  { id: 'damage', name: 'Sharper Edge', desc: '+25% damage', classes: ['mage', 'warrior'], apply: p => { p.stats.damage *= 1.25; } },
-  { id: 'firerate', name: 'Faster Fingers', desc: '+20% fire rate', classes: ['mage'], apply: p => { p.stats.fireRateMs *= 0.83; } },
-  { id: 'movespeed', name: 'Swift Feet', desc: '+15% move speed', classes: ['mage', 'warrior'], apply: p => { p.stats.moveSpeed *= 1.15; } },
-  { id: 'maxhp', name: 'Tough Hide', desc: '+20 max HP (& heal)', classes: ['mage', 'warrior'], apply: p => { p.stats.maxHp += 20; p.hp = p.stats.maxHp; } },
-  { id: 'multishot', name: 'Triple Shot', desc: '+2 bullets spread', classes: ['mage'], apply: p => { p.stats.multishot += 2; } },
-  { id: 'pierce', name: 'Piercing Rounds', desc: '+1 pierce', classes: ['mage'], apply: p => { p.stats.pierce += 1; } },
-  { id: 'bspeed', name: 'Hot Load', desc: '+30% bullet speed', classes: ['mage'], apply: p => { p.stats.bulletSpeed *= 1.3; } },
-  { id: 'regen', name: 'Regeneration', desc: '+1 HP / sec', classes: ['mage', 'warrior'], apply: p => { p.stats.regen += 1; } },
+  { id: 'damage', name: '锋芒', desc: '+25% 伤害', classes: ['mage', 'warrior'], apply: p => { p.stats.damage *= 1.25; } },
+  { id: 'firerate', name: '敏捷连射', desc: '+20% 射速', classes: ['mage'], apply: p => { p.stats.fireRateMs *= 0.83; } },
+  { id: 'movespeed', name: '疾行', desc: '+15% 移动速度', classes: ['mage', 'warrior'], apply: p => { p.stats.moveSpeed *= 1.15; } },
+  { id: 'maxhp', name: '坚毅之肤', desc: '+20 最大生命值（并回复至满）', classes: ['mage', 'warrior'], apply: p => { p.stats.maxHp += 20; p.hp = p.stats.maxHp; } },
+  { id: 'multishot', name: '三连发', desc: '+2 发散射子弹', classes: ['mage'], apply: p => { p.stats.multishot += 2; } },
+  { id: 'pierce', name: '贯穿弹', desc: '+1 穿透', classes: ['mage'], apply: p => { p.stats.pierce += 1; } },
+  { id: 'bspeed', name: '急速装填', desc: '+30% 子弹速度', classes: ['mage'], apply: p => { p.stats.bulletSpeed *= 1.3; } },
+  { id: 'regen', name: '愈合', desc: '+1 生命值/秒', classes: ['mage', 'warrior'], apply: p => { p.stats.regen += 1; } },
   {
-    id: 'skillmax', name: 'Resonance Core', desc: '+1 max skill charge', classes: ['mage', 'warrior'], apply: p => {
+    id: 'skillmax', name: '共振核心', desc: '+1 技能充能上限', classes: ['mage', 'warrior'], apply: p => {
       p.stats.skillChargesMax += 1;
       p.skillCharges = Math.min(p.stats.skillChargesMax, p.skillCharges + 1);
     }
   },
-  { id: 'swingrange', name: 'Long Reach', desc: '+20% swing range', classes: ['warrior'], apply: p => { p.stats.swingRange *= 1.2; } },
-  { id: 'swingarc', name: 'Wide Sweep', desc: '+15° swing arc', classes: ['warrior'], apply: p => { p.stats.swingArc += Math.PI / 12; } },
-  { id: 'attackspeed', name: 'Fervor', desc: '+20% swing speed', classes: ['warrior'], apply: p => { p.stats.attackRateMs *= 0.83; } },
-  { id: 'cleave', name: 'Cleaving Edge', desc: '+30% damage when hitting 2+ targets', classes: ['warrior'], apply: p => { p.stats.cleaveBonus = (p.stats.cleaveBonus ?? 0) + 0.3; } },
+  { id: 'swingrange', name: '延伸打击', desc: '+20% 挥砍范围', classes: ['warrior'], apply: p => { p.stats.swingRange *= 1.2; } },
+  { id: 'swingarc', name: '横扫阔斧', desc: '+15° 挥砍角度', classes: ['warrior'], apply: p => { p.stats.swingArc += Math.PI / 12; } },
+  { id: 'attackspeed', name: '狂热', desc: '+20% 挥砍速度', classes: ['warrior'], apply: p => { p.stats.attackRateMs *= 0.83; } },
+  { id: 'cleave', name: '裂地斩', desc: '命中 2+ 目标时 +30% 伤害', classes: ['warrior'], apply: p => { p.stats.cleaveBonus = (p.stats.cleaveBonus ?? 0) + 0.3; } },
+  {
+    id: 'bt_duration', name: '时光延展', desc: '子弹时间 +1 秒',
+    classes: ['warrior'], maxLevel: 2, levelStat: 'btDurationLevel',
+    apply: p => { p.stats.btDurationLevel = (p.stats.btDurationLevel ?? 0) + 1; },
+  },
+  {
+    id: 'bt_slow', name: '引力井', desc: '子弹时间减速增强',
+    classes: ['warrior'], maxLevel: 2, levelStat: 'btSlowLevel',
+    apply: p => { p.stats.btSlowLevel = (p.stats.btSlowLevel ?? 0) + 1; },
+  },
+  {
+    id: 'time_stop', name: '时停', desc: '5 秒时间停止 — 15 秒冷却',
+    classes: ['warrior'], maxLevel: 1, levelStat: 'hasTimeStop',
+    requires: p => (p.stats.btDurationLevel ?? 0) >= 2
+      && (p.stats.btSlowLevel ?? 0) >= 2,
+    apply: p => {
+      p.stats.hasTimeStop = true;
+      p.stats.skillId = 'time_stop';
+    },
+  },
 ];
 
 export function xpToNext(level) {

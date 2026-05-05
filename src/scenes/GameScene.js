@@ -1,4 +1,4 @@
-import { GAME, SKILL, WORLD, CLASSES, WARRIOR, BULLET_TIME } from '../config.js';
+import { GAME, SKILL, WORLD, CLASSES, WARRIOR, BULLET_TIME, TIME_STOP } from '../config.js';
 import { Player } from '../entities/Player.js';
 import { Bullet } from '../entities/Bullet.js';
 import { EnemyBullet } from '../entities/EnemyBullet.js';
@@ -71,18 +71,24 @@ export class GameScene extends Phaser.Scene {
   }
 
   drawFloor() {
-    // Generate a 32x32 tile texture matching the original grid pattern
-    const g = this.add.graphics().setVisible(false);
-    g.fillStyle(0x15151f, 1).fillRect(0, 0, 32, 32);
-    g.lineStyle(1, 0x22222e, 1);
-    g.strokeRect(0, 0, 32, 32);
-    g.fillStyle(0x2a2a3a, 1).fillRect(15, 15, 2, 2);
-    g.generateTexture('floor_tile', 32, 32);
-    g.destroy();
-
-    // Use tileSprite to cover the entire world
-    this.add.tileSprite(WORLD.width / 2, WORLD.height / 2, WORLD.width, WORLD.height, 'floor_tile')
+    const ts = this.add.tileSprite(WORLD.width / 2, WORLD.height / 2, WORLD.width, WORLD.height, 'map_1')
       .setDepth(-10);
+    ts.tileScaleX = WORLD.tileScale;
+    ts.tileScaleY = WORLD.tileScale;
+    this.floorTile = ts;
+  }
+
+  triggerMapTransition() {
+    const duration = WORLD.mapTransitionDurationMs;
+    this.player.invulnUntil = this.time.now + duration;
+
+    const cam = this.cameras.main;
+    cam.fadeOut(400, 255, 255, 255);
+    cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+      this.floorTile.setTexture('map_2');
+      cam.shake(150, 0.003);
+      cam.fadeIn(400, 255, 255, 255);
+    });
   }
 
   tryShoot() {
@@ -172,9 +178,11 @@ export class GameScene extends Phaser.Scene {
   }
 
   useSkill(player) {
-    const skillId = CLASSES[player.classId]?.skill;
-    if (skillId === 'shockwave')   this.fireShockwave(player.x, player.y);
-    else if (skillId === 'bullet_time') this.fireBulletTime();
+    const skillId = player.stats.skillId ?? CLASSES[player.classId]?.skill;
+    if (skillId === 'shockwave')   { this.fireShockwave(player.x, player.y); return true; }
+    if (skillId === 'bullet_time') return this.fireBulletTime();
+    if (skillId === 'time_stop')   return this.fireTimeStop();
+    return false;
   }
 
   performSwing(player, angle) {
@@ -272,8 +280,14 @@ export class GameScene extends Phaser.Scene {
   }
 
   fireBulletTime() {
-    if (this.slowFactor < 1) return;
-    this.slowFactor = BULLET_TIME.slowFactor;
+    if (this.slowFactor < 1) return false;
+    const stats = this.player?.stats ?? {};
+    const slowLvl = Math.min(stats.btSlowLevel ?? 0, BULLET_TIME.slowFactorLevels.length - 1);
+    const durLvl  = Math.min(stats.btDurationLevel ?? 0, BULLET_TIME.durationLevels.length - 1);
+    const slowFactor = BULLET_TIME.slowFactorLevels[slowLvl];
+    const durationMs = BULLET_TIME.durationLevels[durLvl];
+
+    this.slowFactor = slowFactor;
 
     const vig = this.add.image(0, 0, 'bullet_time_vignette')
       .setOrigin(0).setScrollFactor(0).setDepth(45).setAlpha(0);
@@ -285,7 +299,7 @@ export class GameScene extends Phaser.Scene {
       ease: 'Cubic.easeOut',
     });
 
-    const fadeOutAt = BULLET_TIME.durationMs - BULLET_TIME.vignetteFadeOutMs;
+    const fadeOutAt = durationMs - BULLET_TIME.vignetteFadeOutMs;
     this.time.delayedCall(fadeOutAt, () => {
       if (!vig.scene) return;
       this.tweens.add({
@@ -294,11 +308,122 @@ export class GameScene extends Phaser.Scene {
         ease: 'Cubic.easeIn',
       });
     });
-    this.time.delayedCall(BULLET_TIME.durationMs, () => {
+    this.time.delayedCall(durationMs, () => {
       this.slowFactor = 1;
       vig.destroy();
       if (this._bulletTimeVignette === vig) this._bulletTimeVignette = null;
     });
+    return true;
+  }
+
+  fireTimeStop() {
+    if (this.slowFactor < 1) return false;
+    if (this._timeStopActive) return false;
+    this._timeStopActive = true;
+    this.slowFactor = 0;
+
+    const player = this.player;
+    player.invulnUntil = Math.max(player.invulnUntil, this.time.now + TIME_STOP.invulnMs);
+
+    // Trigger flash + shake
+    const flash = this.add.rectangle(0, 0, GAME.width, GAME.height, 0xffffff, TIME_STOP.flashAlpha)
+      .setOrigin(0).setScrollFactor(0).setDepth(48);
+    this.tweens.add({
+      targets: flash, alpha: 0, duration: TIME_STOP.flashDurationMs,
+      ease: 'Cubic.easeOut', onComplete: () => flash.destroy(),
+    });
+    this.cameras.main.shake(TIME_STOP.shakeMs, TIME_STOP.shakeIntensity);
+
+    // Greyscale overlay (camera-locked, behind clock UI)
+    const overlay = this.add.rectangle(0, 0, GAME.width, GAME.height, TIME_STOP.overlayColor, 0)
+      .setOrigin(0).setScrollFactor(0).setDepth(44);
+    this.tweens.add({ targets: overlay, alpha: TIME_STOP.overlayAlpha, duration: 180 });
+
+    // Tint frozen actors
+    const tintedEnemies = [];
+    this.enemies.getChildren().forEach(e => {
+      if (e.dead || !e.active) return;
+      tintedEnemies.push(e);
+      e.setTint(TIME_STOP.enemyTint);
+    });
+    const tintedBullets = [];
+    this.enemyBullets.getChildren().forEach(b => {
+      if (!b.active) return;
+      tintedBullets.push(b);
+      b.setTint(TIME_STOP.bulletTint);
+    });
+
+    // Clock UI: face + rotating hand (top-right, camera-locked)
+    const cx = TIME_STOP.clockX, cy = TIME_STOP.clockY, cs = TIME_STOP.clockScale;
+    const clock = this.add.image(cx, cy, 'time_stop_clock')
+      .setScrollFactor(0).setDepth(46).setScale(cs).setAlpha(0);
+    const hand = this.add.image(cx, cy, 'time_stop_hand')
+      .setScrollFactor(0).setDepth(47).setScale(cs).setAlpha(0)
+      .setOrigin(0.5, 0.85).setRotation(0).setTint(TIME_STOP.handColors[0]);
+    this.tweens.add({ targets: [clock, hand], alpha: 1, duration: 200 });
+
+    // Hand sweeps a full revolution over duration; tint shifts gold→orange→red
+    const totalMs = TIME_STOP.durationMs;
+    const colors = TIME_STOP.handColors;
+    this.tweens.add({
+      targets: hand,
+      rotation: Math.PI * 2,
+      duration: totalMs,
+      ease: 'Linear',
+      onUpdate: () => {
+        const t = Phaser.Math.Clamp(hand.rotation / (Math.PI * 2), 0, 1);
+        const idx = t < 0.6 ? 0 : t < 0.9 ? 1 : 2;
+        hand.setTint(colors[idx]);
+        if (idx === 2) {
+          hand.setScale(cs * (1 + 0.04 * Math.sin(this.time.now / 30)));
+        }
+      },
+    });
+
+    // End: shatter + greyscale fade-out + flash + shake
+    this.time.delayedCall(totalMs, () => {
+      this._timeStopActive = false;
+      this.slowFactor = 1;
+      tintedEnemies.forEach(e => { if (e && e.active && !e.dead) e.clearTint(); });
+      tintedBullets.forEach(b => { if (b && b.active) b.clearTint(); });
+
+      // Shatter clock into shards
+      const shardCount = TIME_STOP.shardCount;
+      for (let i = 0; i < shardCount; i++) {
+        const key = `time_stop_shard_${i % 6}`;
+        const shard = this.add.image(cx, cy, key)
+          .setScrollFactor(0).setDepth(47).setScale(cs);
+        const a = (i / shardCount) * Math.PI * 2 + Math.random() * 0.6;
+        const speed = Phaser.Math.Between(TIME_STOP.shardSpeedMin, TIME_STOP.shardSpeedMax);
+        const tx = cx + Math.cos(a) * speed * (TIME_STOP.shardLifetimeMs / 1000);
+        const ty = cy + Math.sin(a) * speed * (TIME_STOP.shardLifetimeMs / 1000) + 80;
+        this.tweens.add({
+          targets: shard,
+          x: tx, y: ty,
+          rotation: Phaser.Math.FloatBetween(-Math.PI * 2, Math.PI * 2),
+          alpha: 0,
+          duration: TIME_STOP.shardLifetimeMs,
+          ease: 'Cubic.easeIn',
+          onComplete: () => shard.destroy(),
+        });
+      }
+      clock.destroy();
+      hand.destroy();
+
+      // Greyscale fade-out + closing flash
+      this.tweens.add({
+        targets: overlay, alpha: 0, duration: 260,
+        onComplete: () => overlay.destroy(),
+      });
+      const endFlash = this.add.rectangle(0, 0, GAME.width, GAME.height, 0xffffff, 0.6)
+        .setOrigin(0).setScrollFactor(0).setDepth(48);
+      this.tweens.add({
+        targets: endFlash, alpha: 0, duration: 180,
+        onComplete: () => endFlash.destroy(),
+      });
+      this.cameras.main.shake(TIME_STOP.shakeMs, TIME_STOP.shakeIntensity);
+    });
+    return true;
   }
 
   fireShockwave(x, y) {
