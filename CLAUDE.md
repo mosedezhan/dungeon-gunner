@@ -29,7 +29,7 @@ BootScene → MenuScene → GameScene（并行运行：HUDScene）
                           └─ GameOverScene（死亡时替换所有场景）
 ```
 
-- **BootScene** — 通过 `Graphics.generateTexture()` 程序化生成所有纹理和动画。无外部精灵图资源。每个角色/敌人/特效都定义为像素网格常量，绘制到纹理上。所有 Phaser 动画 key 在此处创建。
+- **BootScene** — 通过 `Graphics.generateTexture()` 程序化生成所有精灵纹理和动画。地图地板纹理从 `assets/map/` 加载外部 PNG（`preload()` 阶段加载，`map_1` 暗色地牢 / `map_2` 暖色遗迹）。所有 Phaser 动画 key 在此处创建。
 - **GameScene** — 主游戏循环。拥有所有物理组（`bullets`、`enemyBullets`、`xpOrbs`、`enemies`、`skillOrbs`）、`Player` 实例和 `WaveManager`。所有碰撞/重叠回调在此处理。通过 `scene.launch('HUDScene')` 并行启动 HUD。URL 加 `?debug` 参数可跳过菜单直接进入并停止自动刷怪。
 - **DebugScene** — F1 触发的开发调试叠层。暂停 GameScene，提供即时刷怪（数字键 1-9，在玩家周围生成）、技能充能（Q）、God Mode（W）、Kill All（E）、跳波（R）、停止自动刷怪（T）。可 spawn 实体列表集中在 `src/debug/registry.js`。
 - **HUDScene** — 每帧通过 `this.scene.get('GameScene')` 直接读取游戏状态。提供 `showBanner(text)` 方法供 GameScene 在波次切换时调用（首波因 launch 异步需要延迟调用）。
@@ -49,14 +49,14 @@ BootScene → MenuScene → GameScene（并行运行：HUDScene）
 
 ### 配置文件 (`src/config.js`)
 
-所有可调参数的唯一来源：玩家属性、敌人定义、波次时间、XP 曲线、`SKILL` 主动技能参数、升级定义。`UPGRADES` 数组包含 `apply(p)` 函数，直接修改 `Player.stats`。调整游戏平衡时只需修改此文件。
+所有可调参数的唯一来源：玩家属性、敌人定义、波次时间、XP 曲线、`SKILL` 主动技能参数、升级定义。`UPGRADES` 数组包含 `apply(p)` 函数，直接修改 `Player.stats`；条目可选 `maxLevel` + `levelStat`（同一升级最多抽几次）和 `requires(player)`（解锁条件 gate）。调整游戏平衡时只需修改此文件。
 
 ### 关键约定
 
-- **无需外部资源。** 所有精灵都是 BootScene 中程序化生成的像素艺术。纹理 key 是硬编码字符串，在场景/实体间交叉引用。
+- **精灵程序化生成，地图纹理使用外部 PNG。** 所有角色/敌人/特效精灵仍由 BootScene 程序化生成。地板纹理从 `assets/map/` 加载外部无缝 PNG，通过 tileSprite 铺满世界。W10 时通过 camera fade 过渡切换地图纹理（`GameScene.triggerMapTransition()`）。
 - **场景通信** 使用 Phaser 场景管理器（`scene.get()`、`scene.pause()`、`scene.launch()`、带数据的 `scene.start()`）。不使用事件总线。
 - **`GameScene.handleEnemyDeath()`** 由 `Enemy.die()` 通过场景引用调用 — 这是生成 XP 球和追踪击杀数的钩子。
-- **主动技能钩子** — `Player.triggerSkill()` 消耗充能后调 `this.scene.useSkill?.(this)`；`GameScene.useSkill(player)` 按 `CLASSES[classId].skill` 字符串分派到具体实现（shockwave / bullet_time）。
+- **主动技能钩子** — `Player.triggerSkill()` 调 `this.scene.useSkill?.(this)`，仅在 `useSkill` 返回非 false 时消耗资源；`GameScene.useSkill(player)` 优先按 `player.stats.skillId` 分派，回退到 `CLASSES[classId].skill`（shockwave / bullet_time / time_stop）。技能可走充能制（默认 1，`stats.skillCost` 可覆盖）或独立实时冷却制（如 time_stop 用 `Player.timeStopReadyAt` + `TIME_STOP.cooldownMs`）。
 - **物理组** 使用 `runChildUpdate: true`，使池化实体在激活时自动调用 `preUpdate`。
 - **Debug 面板** — `DebugScene`（F1 触发）提供运行时调试：即时刷怪、技能充能、God Mode、Kill All、跳波。可 spawn 的实体集中在 `src/debug/registry.js` 注册。**新增 Enemy 子类时必须同步更新此文件**（见 `src/entities/CLAUDE.md` checklist）。
 
