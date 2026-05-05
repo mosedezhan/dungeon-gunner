@@ -468,6 +468,34 @@ export class BootScene extends Phaser.Scene {
     sorb.generateTexture('skill_orb', 10, 10);
     sorb.destroy();
 
+    // Siphon XP orb: gold with green glow (distinct from normal cyan XP)
+    const siorb = this.add.graphics().setVisible(false);
+    siorb.fillStyle(0xffd700, 1);   siorb.fillCircle(5, 5, 5);
+    siorb.fillStyle(0xffaa22, 1);   siorb.fillCircle(5, 5, 4);
+    siorb.fillStyle(0x44ff88, 0.7); siorb.fillCircle(5, 5, 3);
+    siorb.fillStyle(0xffffff, 1);   siorb.fillCircle(4, 4, 1);
+    siorb.generateTexture('xp_orb_siphon', 10, 10);
+    siorb.destroy();
+
+    // Arcane vortex: purple energy swirl (64x64)
+    const VORTEX = 64;
+    const vt = this.add.graphics().setVisible(false);
+    const vc = VORTEX / 2;
+    vt.fillStyle(0x220044, 0.3); vt.fillCircle(vc, vc, 30);
+    vt.fillStyle(0x6622aa, 0.5); vt.fillCircle(vc, vc, 22);
+    vt.fillStyle(0xaa44ff, 0.7); vt.fillCircle(vc, vc, 14);
+    vt.fillStyle(0xdd88ff, 0.9); vt.fillCircle(vc, vc, 8);
+    vt.fillStyle(0xffffff, 0.8); vt.fillCircle(vc, vc, 3);
+    vt.lineStyle(2, 0xaa44ff, 0.6);
+    for (let i = 0; i < 4; i++) {
+      const a = (i / 4) * Math.PI * 2;
+      vt.beginPath();
+      vt.arc(vc, vc, 18, a, a + Math.PI / 3);
+      vt.strokePath();
+    }
+    vt.generateTexture('arcane_vortex', VORTEX, VORTEX);
+    vt.destroy();
+
     // Shockwave ring: transparent center, bright outer rim, faint inner halo
     const shock = this.add.graphics().setVisible(false);
     shock.fillStyle(0x66bbff, 0.18); shock.fillCircle(32, 32, 30);

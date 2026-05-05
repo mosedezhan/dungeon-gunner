@@ -13,6 +13,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.body.setDamping(true).setDrag(0.0005);
     this.contactCooldown = 0;
     this.knockUntil = 0;
+    this.frostSlowFactor = 1;
+    this.frostSlowUntil = 0;
   }
 
   takeDamage(amount) {
@@ -30,7 +32,14 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   }
 
   setVelocity(x, y) {
-    const sf = this.scene?.slowFactor ?? 1;
+    let sf = this.scene?.slowFactor ?? 1;
+    if (this.scene && this.scene.time.now < this.frostSlowUntil) {
+      sf *= this.frostSlowFactor;
+    } else if (this.frostSlowUntil > 0) {
+      this.frostSlowUntil = 0;
+      this.frostSlowFactor = 1;
+      if (!this.dead && this.active) this.clearTint();
+    }
     return super.setVelocity(x * sf, y * sf);
   }
 

@@ -75,6 +75,14 @@ export class HUDScene extends Phaser.Scene {
     if (p.stats.hasTimeStop) {
       const cd = Math.max(0, ((p.timeStopReadyAt ?? 0) - gs.time.now) / 1000);
       skillLine = cd <= 0 ? '时停就绪' : `时停 ${cd.toFixed(1)} 秒`;
+    } else if (p.stats.hasArcaneStorm && p.classId === 'mage') {
+      const charges = p.skillCharges;
+      const max = p.stats.skillChargesMax;
+      if (charges >= 3) {
+        skillLine = `风暴就绪 ${charges}/${max}`;
+      } else {
+        skillLine = `技能 ${charges}/${max}  (风暴需 3)`;
+      }
     } else {
       skillLine = `技能 ${p.skillCharges}/${p.stats.skillChargesMax}`;
     }

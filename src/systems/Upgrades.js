@@ -17,13 +17,20 @@ export function randomUpgrades(count, player) {
   let picks = Phaser.Utils.Array.Shuffle(pool.slice()).slice(0, count);
 
   // First-time guarantee for time_stop unlock card.
-  // Why: missing the unlock would feel unfair given how much investment it takes.
   const ts = pool.find(u => u.id === 'time_stop');
   if (ts && !stats.timeStopShown && !picks.includes(ts)) {
     if (picks.length === 0) picks = [ts];
     else picks[picks.length - 1] = ts;
   }
   if (ts) stats.timeStopShown = true;
+
+  // First-time guarantee for arcane_storm unlock card.
+  const as = pool.find(u => u.id === 'arcane_storm');
+  if (as && !stats.arcaneStormShown && !picks.includes(as)) {
+    if (picks.length === 0) picks = [as];
+    else picks[picks.length - 1] = as;
+  }
+  if (as) stats.arcaneStormShown = true;
 
   return picks;
 }

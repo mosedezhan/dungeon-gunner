@@ -145,6 +145,28 @@ export const BULLET_TIME = {
   slowFactorLevels: [0.30, 0.20, 0.10],
 };
 
+export const ARCANE_STORM = {
+  pulseCount: 5,
+  pulseIntervalMs: 800,
+  baseRadius: 120,
+  radiusStep: 40,
+  damagePercent: 0.15,
+  knockbackForce: 480,
+  vfxMaxScale: 8,
+  vortexDurationMs: 4000,
+  vortexScale: 4,
+  pulseColor: 0xaa44ff,
+  // Frost overlay per pulse
+  frostSlowFactors: [1, 0.5, 0.35],
+  frostDurationsMs: [0, 2000, 3000],
+  frostTint: 0x88ccff,
+  // Siphon per pulse
+  siphonOrbCounts: [0, 1, 2],
+  siphonXpMultipliers: [0, 0.5, 0.75],
+  siphonTint: 0x44ff88,
+  siphonLineDurationMs: 300,
+};
+
 export const TIME_STOP = {
   cooldownMs: 15000,
   durationMs: 5000,
@@ -207,6 +229,26 @@ export const UPGRADES = [
       p.stats.hasTimeStop = true;
       p.stats.skillId = 'time_stop';
     },
+  },
+  {
+    id: 'frost_nova', name: '冰霜新星', desc: '冲击波附带减速',
+    classes: ['mage'], maxLevel: 2, levelStat: 'frostLevel',
+    apply: p => { p.stats.frostLevel = (p.stats.frostLevel ?? 0) + 1; },
+  },
+  {
+    id: 'mana_siphon', name: '法力虹吸', desc: '冲击波吸取经验',
+    classes: ['mage'], maxLevel: 2, levelStat: 'siphonLevel',
+    apply: p => { p.stats.siphonLevel = (p.stats.siphonLevel ?? 0) + 1; },
+  },
+  {
+    id: 'arcane_storm', name: '奥术风暴', desc: '5 次冲击波脉冲 — 消耗 3 充能',
+    classes: ['mage'], maxLevel: 1, levelStat: 'hasArcaneStorm',
+    requires: p => {
+      const frost = p.stats.frostLevel ?? 0;
+      const siphon = p.stats.siphonLevel ?? 0;
+      return (frost + siphon) >= 3;
+    },
+    apply: p => { p.stats.hasArcaneStorm = true; },
   },
 ];
 

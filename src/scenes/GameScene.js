@@ -1,9 +1,10 @@
-import { GAME, SKILL, WORLD, CLASSES, WARRIOR, BULLET_TIME, TIME_STOP } from '../config.js';
+import { GAME, SKILL, WORLD, CLASSES, WARRIOR, BULLET_TIME, TIME_STOP, ARCANE_STORM } from '../config.js';
 import { Player } from '../entities/Player.js';
 import { Bullet } from '../entities/Bullet.js';
 import { EnemyBullet } from '../entities/EnemyBullet.js';
 import { XPOrb } from '../entities/XPOrb.js';
 import { SkillOrb } from '../entities/SkillOrb.js';
+import { SiphonOrb } from '../entities/SiphonOrb.js';
 import { WaveManager } from '../systems/WaveManager.js';
 import { World } from '../systems/World.js';
 import { Mimic } from '../entities/enemies/Mimic.js';
@@ -23,6 +24,7 @@ export class GameScene extends Phaser.Scene {
     this.enemyBullets = this.physics.add.group({ classType: EnemyBullet, runChildUpdate: true, maxSize: 200 });
     this.xpOrbs       = this.physics.add.group({ classType: XPOrb,       runChildUpdate: true, maxSize: 400 });
     this.skillOrbs    = this.physics.add.group({ classType: SkillOrb,    runChildUpdate: true, maxSize: 100 });
+    this.siphonOrbs   = this.physics.add.group({ classType: SiphonOrb,   runChildUpdate: true, maxSize: 200 });
     this.enemies      = this.physics.add.group();
 
     this.physics.add.overlap(this.bullets, this.enemies, this.onBulletHitEnemy, null, this);
@@ -30,6 +32,7 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.overlap(this.player, this.enemyBullets, this.onPlayerHitByEnemyBullet, null, this);
     this.physics.add.overlap(this.player, this.xpOrbs, this.onPickupXP, null, this);
     this.physics.add.overlap(this.player, this.skillOrbs, this.onPickupSkillOrb, null, this);
+    this.physics.add.overlap(this.player, this.siphonOrbs, this.onPickupXP, null, this);
 
     this.kills = 0;
     this.slowFactor = 1;
@@ -179,7 +182,13 @@ export class GameScene extends Phaser.Scene {
 
   useSkill(player) {
     const skillId = player.stats.skillId ?? CLASSES[player.classId]?.skill;
-    if (skillId === 'shockwave')   { this.fireShockwave(player.x, player.y); return true; }
+    if (skillId === 'shockwave') {
+      if (player.stats.hasArcaneStorm && player.skillCharges >= 3 && !this._arcaneStormActive) {
+        return this.fireArcaneStorm(player.x, player.y);
+      }
+      this.fireShockwave(player.x, player.y);
+      return true;
+    }
     if (skillId === 'bullet_time') return this.fireBulletTime();
     if (skillId === 'time_stop')   return this.fireTimeStop();
     return false;
@@ -427,6 +436,10 @@ export class GameScene extends Phaser.Scene {
   }
 
   fireShockwave(x, y) {
+    const p = this.player;
+    const frostLevel = p.stats.frostLevel ?? 0;
+    const siphonLevel = p.stats.siphonLevel ?? 0;
+
     this.enemyBullets.getChildren().forEach(b => { if (b.active) b.kill(); });
     this.enemies.getChildren().forEach(e => {
       if (e.dead) return;
@@ -434,10 +447,57 @@ export class GameScene extends Phaser.Scene {
       if (d < SKILL.knockbackRadius) {
         e.takeDamage(e.maxHp * SKILL.damagePercent);
         if (!e.dead) e.knockback(x, y, SKILL.knockbackForce);
+
+        // Frost slow
+        if (frostLevel > 0 && !e.dead) {
+          e.frostSlowFactor = ARCANE_STORM.frostSlowFactors[frostLevel];
+          e.frostSlowUntil = this.time.now + ARCANE_STORM.frostDurationsMs[frostLevel];
+          e.setTint(ARCANE_STORM.frostTint);
+        }
+
+        // Mana siphon: green flash + siphon orbs
+        if (siphonLevel > 0 && !e.dead) {
+          this._spawnSiphonVfx(e.x, e.y, p, siphonLevel, e.cfg.xp);
+        }
       }
     });
     this._spawnShockwaveVfx(x, y);
     this.cameras.main.shake(120, 0.004);
+  }
+
+  _spawnSiphonVfx(ex, ey, player, siphonLevel, enemyXp) {
+    // Green flash on enemy
+    const flash = this.add.image(ex, ey, 'xp_orb_siphon')
+      .setBlendMode(Phaser.BlendModes.ADD).setScale(3).setDepth(20).setAlpha(0.8);
+    this.tweens.add({
+      targets: flash, alpha: 0, scale: 5, duration: 200,
+      onComplete: () => flash.destroy(),
+    });
+
+    // Green energy line from enemy to player
+    const line = this.add.graphics().setDepth(21);
+    line.lineStyle(2, ARCANE_STORM.siphonTint, 0.8);
+    line.beginPath();
+    line.moveTo(ex, ey);
+    line.lineTo(player.x, player.y);
+    line.strokePath();
+    this.tweens.add({
+      targets: line, alpha: 0, duration: ARCANE_STORM.siphonLineDurationMs,
+      onComplete: () => line.destroy(),
+    });
+
+    // Spawn gold XP orbs near player after short delay
+    const orbCount = ARCANE_STORM.siphonOrbCounts[siphonLevel];
+    const xpMult = ARCANE_STORM.siphonXpMultipliers[siphonLevel];
+    const orbValue = Math.max(1, Math.round(enemyXp * xpMult));
+    this.time.delayedCall(ARCANE_STORM.siphonLineDurationMs * 0.6, () => {
+      for (let i = 0; i < orbCount; i++) {
+        const ox = player.x + Phaser.Math.Between(-20, 20);
+        const oy = player.y + Phaser.Math.Between(-20, 20);
+        const orb = this.siphonOrbs.get(ox, oy);
+        if (orb) orb.spawn(ox, oy, orbValue);
+      }
+    });
   }
 
   _spawnShockwaveVfx(x, y) {
@@ -453,6 +513,103 @@ export class GameScene extends Phaser.Scene {
       ease: 'Cubic.easeOut',
       onComplete: () => ring.destroy(),
     });
+  }
+
+  fireArcaneStorm(x, y) {
+    if (this._arcaneStormActive) return false;
+    this._arcaneStormActive = true;
+
+    const p = this.player;
+    const frostLevel = p.stats.frostLevel ?? 0;
+    const siphonLevel = p.stats.siphonLevel ?? 0;
+    const pulseCount = ARCANE_STORM.pulseCount;
+
+    // Spawn central vortex
+    const vortex = this.add.image(x, y, 'arcane_vortex')
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(19)
+      .setScale(0.5)
+      .setAlpha(0.8);
+    this.tweens.add({
+      targets: vortex,
+      rotation: Math.PI * 4,
+      scale: ARCANE_STORM.vortexScale,
+      alpha: 0.3,
+      duration: ARCANE_STORM.vortexDurationMs,
+      ease: 'Linear',
+    });
+
+    // Update vortex position to follow player
+    const vortexFollow = () => {
+      if (vortex.scene) {
+        vortex.x = p.x;
+        vortex.y = p.y;
+      }
+    };
+
+    // Fire pulses at intervals
+    for (let i = 0; i < pulseCount; i++) {
+      this.time.delayedCall(i * ARCANE_STORM.pulseIntervalMs, () => {
+        if (!this._arcaneStormActive) return;
+
+        const radius = ARCANE_STORM.baseRadius + i * ARCANE_STORM.radiusStep;
+        const px = p.x, py = p.y;
+
+        // Clear enemy bullets
+        this.enemyBullets.getChildren().forEach(b => { if (b.active) b.kill(); });
+
+        // Damage + effects in radius
+        this.enemies.getChildren().forEach(e => {
+          if (e.dead) return;
+          const d = Phaser.Math.Distance.Between(px, py, e.x, e.y);
+          if (d < radius) {
+            e.takeDamage(e.maxHp * ARCANE_STORM.damagePercent);
+            if (!e.dead) e.knockback(px, py, ARCANE_STORM.knockbackForce);
+
+            // Inherit frost
+            if (frostLevel > 0 && !e.dead) {
+              e.frostSlowFactor = ARCANE_STORM.frostSlowFactors[frostLevel];
+              e.frostSlowUntil = this.time.now + ARCANE_STORM.frostDurationsMs[frostLevel];
+              e.setTint(ARCANE_STORM.frostTint);
+            }
+
+            // Inherit siphon
+            if (siphonLevel > 0 && !e.dead) {
+              this._spawnSiphonVfx(e.x, e.y, p, siphonLevel, e.cfg.xp);
+            }
+          }
+        });
+
+        // Purple shockwave ring
+        const ring = this.add.image(px, py, 'shockwave')
+          .setBlendMode(Phaser.BlendModes.ADD)
+          .setDepth(20)
+          .setScale(0.3)
+          .setTint(ARCANE_STORM.pulseColor);
+        this.tweens.add({
+          targets: ring,
+          scale: SKILL.vfxMaxScale + i * 0.5,
+          alpha: 0,
+          duration: SKILL.vfxDurationMs,
+          ease: 'Cubic.easeOut',
+          onComplete: () => ring.destroy(),
+        });
+
+        this.cameras.main.shake(100, 0.005);
+        vortexFollow();
+      });
+    }
+
+    // End storm
+    this.time.delayedCall(pulseCount * ARCANE_STORM.pulseIntervalMs + 200, () => {
+      this._arcaneStormActive = false;
+      this.tweens.add({
+        targets: vortex, alpha: 0, scale: ARCANE_STORM.vortexScale * 1.5, duration: 300,
+        onComplete: () => vortex.destroy(),
+      });
+    });
+
+    return 3; // consume 3 charges
   }
 
   onWaveStart(n) {

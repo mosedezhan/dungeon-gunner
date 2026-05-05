@@ -186,7 +186,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (this.skillCharges < cost) return false;
     const fired = this.scene.useSkill?.(this);
     if (fired === false) return false;
-    this.skillCharges -= cost;
+    this.skillCharges -= (typeof fired === 'number' ? fired : cost);
     return true;
   }
 
