@@ -44,6 +44,12 @@ export const ENEMY = {
     triggerRange: 180, windUpMs: 300, jumpMs: 150, leapSpeed: 300,
     blastRadius: 75, blastDamage: 25, cooldownMs: 2000,
   },
+  mimic: {
+    hp: 18, speed: 160, contactDamage: 0, radius: 10, xp: 8, tint: 0xc8a028, bodyTint: 0x6a4a14,
+    wanderRadius: 30, wanderSpeed: 20, wanderPauseMinMs: 500, wanderPauseMaxMs: 1000,
+    triggerRange: 150, fleeTimeMs: 8000, wanderTimeMs: 12000, panicAccel: 40,
+    zigzagIntervalMs: 500, zigzagSpread: 0.52,
+  },
   elite_chaser: {
     hp: 200, speed: 70, contactDamage: 15, radius: 10, xp: 5,
     berserkSpeed: 140, berserkThreshold: 0.6, berserkTint: 0xff3333,

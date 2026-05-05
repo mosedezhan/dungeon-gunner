@@ -248,6 +248,14 @@ const BOMBER_PALETTE = {
   W: 0xffffff, O: 0x0a0402,
 };
 
+// Mimic: treasure chest disguise (brown-gold) and revealed form (open lid, red eyes, legs)
+const MIMIC_PALETTE = {
+  C: 0xc8a028, c: 0x8a6a14, B: 0x6a4a14, b: 0x4a3010,
+  G: 0xffd700, g: 0xbba020, L: 0xdab840,
+  E: 0xff3333, W: 0xffffff, D: 0x2a1a08, O: 0x0a0802,
+  R: 0xcc8844, r: 0x996633,
+};
+
 const BOMBER_A = [
   '...OOOOO...',
   '..ORrrrRO..',
@@ -271,6 +279,58 @@ const BOMBER_B = [
   '..ORRRRRO..',
   '...OO.OO...',
   '...O...O...',
+];
+
+// Mimic chest (closed): brown-gold treasure chest
+const MIMIC_CHEST_A = [
+  '............',
+  '..OBbbbbbBO.',
+  '.OBCCCCCCBO.',
+  'OBCCCGGCCBBO',
+  'OBCCLLLLLCBO',
+  'OBBCCLLLCBBO',
+  'OBBCCCCCCBBO',
+  '.OBccccccBO.',
+  '..OOBOOBOO..',
+  '...O...O....',
+];
+const MIMIC_CHEST_B = [
+  '............',
+  '..OBbbbbbBO.',
+  '.OBCCCCCCBO.',
+  'OBCCCGGCCBBO',
+  'OBCCLLLLLCBO',
+  'OBBCCLLLCBBO',
+  'OBBCCCCCCBBO',
+  '.OBccccccBO.',
+  '....OO.OO...',
+  '....O...O...',
+];
+
+// Mimic revealed (open lid, red eyes, small legs): fleeing form
+const MIMIC_REVEALED_A = [
+  '.....D....',
+  '....GcG...',
+  '..OBCCCCBO',
+  '.OBCCLLLBO',
+  '.OBCCCCCCBO',
+  '..OBCCEEBO',
+  '...OBccBO.',
+  '...OBBBBO.',
+  '..ORO.ORO.',
+  '..OO...OO.',
+];
+const MIMIC_REVEALED_B = [
+  '.....D....',
+  '....GcG...',
+  '..OBCCCCBO',
+  '.OBCCLLLBO',
+  '.OBCCCCCCBO',
+  '..OBCCEEBO',
+  '...OBccBO.',
+  '...OBBBBO.',
+  '...OO.OO..',
+  '...O...O..',
 ];
 
 export class BootScene extends Phaser.Scene {
@@ -305,6 +365,10 @@ export class BootScene extends Phaser.Scene {
     makeTex(this, 'giant_b', GIANT_B, GIANT_PALETTE);
     makeTex(this, 'bomber_a', BOMBER_A, BOMBER_PALETTE);
     makeTex(this, 'bomber_b', BOMBER_B, BOMBER_PALETTE);
+    makeTex(this, 'mimic_chest_a', MIMIC_CHEST_A, MIMIC_PALETTE);
+    makeTex(this, 'mimic_chest_b', MIMIC_CHEST_B, MIMIC_PALETTE);
+    makeTex(this, 'mimic_revealed_a', MIMIC_REVEALED_A, MIMIC_PALETTE);
+    makeTex(this, 'mimic_revealed_b', MIMIC_REVEALED_B, MIMIC_PALETTE);
 
     // Gun: small horizontal sprite (barrel points right at angle 0)
     const gun = this.add.graphics().setVisible(false);
@@ -503,6 +567,16 @@ export class BootScene extends Phaser.Scene {
       key: 'bomber_die',
       frames: [{ key: 'bomber_a' }, { key: 'bomber_b' }],
       frameRate: 8, repeat: 0,
+    });
+    this.anims.create({
+      key: 'mimic_wander',
+      frames: [{ key: 'mimic_chest_a' }, { key: 'mimic_chest_b' }],
+      frameRate: 2, repeat: -1,
+    });
+    this.anims.create({
+      key: 'mimic_flee',
+      frames: [{ key: 'mimic_revealed_a' }, { key: 'mimic_revealed_b' }],
+      frameRate: 10, repeat: -1,
     });
 
     const params = new URLSearchParams(window.location.search);

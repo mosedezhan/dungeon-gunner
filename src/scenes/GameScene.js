@@ -6,6 +6,7 @@ import { XPOrb } from '../entities/XPOrb.js';
 import { SkillOrb } from '../entities/SkillOrb.js';
 import { WaveManager } from '../systems/WaveManager.js';
 import { World } from '../systems/World.js';
+import { Mimic } from '../entities/enemies/Mimic.js';
 
 export class GameScene extends Phaser.Scene {
   constructor() { super('GameScene'); }
@@ -152,6 +153,21 @@ export class GameScene extends Phaser.Scene {
     if (Math.random() < SKILL.dropChance) {
       const so = this.skillOrbs.get(enemy.x, enemy.y);
       if (so) so.spawn(enemy.x, enemy.y);
+    }
+
+    if (enemy instanceof Mimic) {
+      if (Math.random() < 0.25) {
+        this.triggerLevelUp(1);
+      } else {
+        this.player.skillCharges = this.player.stats.skillChargesMax;
+        const glow = this.add.image(this.player.x, this.player.y, 'skill_orb')
+          .setBlendMode(Phaser.BlendModes.ADD)
+          .setScale(5).setDepth(30).setAlpha(0.8);
+        this.tweens.add({
+          targets: glow, alpha: 0, scale: 8, duration: 400, ease: 'Cubic.easeOut',
+          onComplete: () => glow.destroy(),
+        });
+      }
     }
   }
 
