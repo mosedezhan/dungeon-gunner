@@ -339,6 +339,12 @@ export class BootScene extends Phaser.Scene {
   preload() {
     this.load.image('map_1', 'assets/map/map_1.png');
     this.load.image('map_2', 'assets/map/map_2.png');
+    this.load.spritesheet('warrior_sheet', 'assets/warrior2/warrior2_sheet.png', {
+      frameWidth: 128, frameHeight: 131,
+    });
+    this.load.spritesheet('mage_sheet', 'assets/mage/mage_sheet.png', {
+      frameWidth: 128, frameHeight: 128,
+    });
   }
 
   create() {
@@ -347,18 +353,6 @@ export class BootScene extends Phaser.Scene {
     makeTex(this, 'player_idle_b', PLAYER_IDLE_B, PLAYER_PALETTE);
     makeTex(this, 'player_run_a',  PLAYER_RUN_A,  PLAYER_PALETTE);
     makeTex(this, 'player_run_b',  PLAYER_RUN_B,  PLAYER_PALETTE);
-
-    // Mage: blue variant of player
-    makeTex(this, 'mage_idle_a', PLAYER_IDLE_A, MAGE_PALETTE);
-    makeTex(this, 'mage_idle_b', PLAYER_IDLE_B, MAGE_PALETTE);
-    makeTex(this, 'mage_run_a',  PLAYER_RUN_A,  MAGE_PALETTE);
-    makeTex(this, 'mage_run_b',  PLAYER_RUN_B,  MAGE_PALETTE);
-
-    // Warrior: red/orange variant of player
-    makeTex(this, 'warrior_idle_a', PLAYER_IDLE_A, WARRIOR_PALETTE);
-    makeTex(this, 'warrior_idle_b', PLAYER_IDLE_B, WARRIOR_PALETTE);
-    makeTex(this, 'warrior_run_a',  PLAYER_RUN_A,  WARRIOR_PALETTE);
-    makeTex(this, 'warrior_run_b',  PLAYER_RUN_B,  WARRIOR_PALETTE);
 
     makeTex(this, 'chaser_a',  CHASER_A,  CHASER_PALETTE);
     makeTex(this, 'chaser_b',  CHASER_B,  CHASER_PALETTE);
@@ -601,24 +595,56 @@ export class BootScene extends Phaser.Scene {
       frameRate: 10, repeat: -1,
     });
     this.anims.create({
-      key: 'mage_idle',
-      frames: [{ key: 'mage_idle_a' }, { key: 'mage_idle_b' }],
+      key: 'mage_south_idle', frames: this.anims.generateFrameNumbers('mage_sheet', { start: 0, end: 6 }),
       frameRate: 3, repeat: -1,
     });
     this.anims.create({
-      key: 'mage_run',
-      frames: [{ key: 'mage_run_a' }, { key: 'mage_idle_a' }, { key: 'mage_run_b' }, { key: 'mage_idle_a' }],
+      key: 'mage_south_run', frames: this.anims.generateFrameNumbers('mage_sheet', { start: 0, end: 6 }),
       frameRate: 10, repeat: -1,
     });
     this.anims.create({
-      key: 'warrior_idle',
-      frames: [{ key: 'warrior_idle_a' }, { key: 'warrior_idle_b' }],
+      key: 'mage_east_idle', frames: this.anims.generateFrameNumbers('mage_sheet', { start: 7, end: 13 }),
       frameRate: 3, repeat: -1,
     });
     this.anims.create({
-      key: 'warrior_run',
-      frames: [{ key: 'warrior_run_a' }, { key: 'warrior_idle_a' }, { key: 'warrior_run_b' }, { key: 'warrior_idle_a' }],
+      key: 'mage_east_run', frames: this.anims.generateFrameNumbers('mage_sheet', { start: 7, end: 13 }),
       frameRate: 10, repeat: -1,
+    });
+    this.anims.create({
+      key: 'mage_north_idle', frames: this.anims.generateFrameNumbers('mage_sheet', { start: 14, end: 20 }),
+      frameRate: 3, repeat: -1,
+    });
+    this.anims.create({
+      key: 'mage_north_run', frames: this.anims.generateFrameNumbers('mage_sheet', { start: 14, end: 20 }),
+      frameRate: 10, repeat: -1,
+    });
+    this.anims.create({
+      key: 'warrior_south_idle', frames: this.anims.generateFrameNumbers('warrior_sheet', { start: 0, end: 7 }),
+      frameRate: 3, repeat: -1,
+    });
+    this.anims.create({
+      key: 'warrior_south_run', frames: this.anims.generateFrameNumbers('warrior_sheet', { start: 0, end: 7 }),
+      frameRate: 10, repeat: -1,
+    });
+    this.anims.create({
+      key: 'warrior_east_idle', frames: this.anims.generateFrameNumbers('warrior_sheet', { start: 8, end: 15 }),
+      frameRate: 3, repeat: -1,
+    });
+    this.anims.create({
+      key: 'warrior_east_run', frames: this.anims.generateFrameNumbers('warrior_sheet', { start: 8, end: 15 }),
+      frameRate: 10, repeat: -1,
+    });
+    this.anims.create({
+      key: 'warrior_north_idle', frames: this.anims.generateFrameNumbers('warrior_sheet', { start: 16, end: 23 }),
+      frameRate: 3, repeat: -1,
+    });
+    this.anims.create({
+      key: 'warrior_north_run', frames: this.anims.generateFrameNumbers('warrior_sheet', { start: 16, end: 23 }),
+      frameRate: 10, repeat: -1,
+    });
+    this.anims.create({
+      key: 'warrior_attack', frames: this.anims.generateFrameNumbers('warrior_sheet', { start: 24, end: 31 }),
+      frameRate: 12, repeat: 0,
     });
     this.anims.create({
       key: 'chaser_walk',

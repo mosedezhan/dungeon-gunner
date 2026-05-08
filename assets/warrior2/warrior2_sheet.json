@@ -1,0 +1,62 @@
+{
+  "id": "warrior2",
+  "frameWidth": 128,
+  "frameHeight": 131,
+  "columns": 8,
+  "rows": 4,
+  "totalFrames": 32,
+  "directions": {
+    "south": {
+      "row": 0,
+      "frames": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    "east": {
+      "row": 1,
+      "frames": [
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ]
+    },
+    "north": {
+      "row": 2,
+      "frames": [
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23
+      ]
+    },
+    "attack": {
+      "row": 3,
+      "frames": [
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31
+      ]
+    }
+  }
+}

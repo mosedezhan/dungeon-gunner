@@ -58,7 +58,9 @@
       "Bash(node *)",
       "Bash(npm --version)",
       "Bash(npm install *)",
-      "PowerShell(Move-Item *)"
+      "PowerShell(Move-Item *)",
+      "PowerShell(Add-Type -AssemblyName System.Drawing; $img = [System.Drawing.Image]::FromFile\\(\\(Resolve-Path 'D:\\\\web-learning\\\\范例\\\\dungeon-gunner\\\\assets\\\\warrior2\\\\south\\\\frame_000.png'\\).Path\\); \"size=$\\($img.Width\\)x$\\($img.Height\\) format=$\\($img.PixelFormat\\)\"; $img.Dispose\\(\\))",
+      "Bash(pip install *)"
     ]
   }
 }

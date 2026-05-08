@@ -41,7 +41,7 @@ BootScene → MenuScene → GameScene（并行运行：HUDScene）
 
 实体继承 `Phaser.Physics.Arcade.Sprite`，通过 `scene.add.existing(this)` + `scene.physics.add.existing(this)` 自注册。通过 `scene.physics.add.group({ classType, maxSize })` 进行对象池化。
 
-- **Player** — 持有 `stats` 对象（`PLAYER` 配置的可变副本）。枪是独立的精灵，跟随鼠标旋转。`muzzle` 是每帧更新的 `Vector2`，作为子弹生成点。支持无敌帧和生命回复累积。持有主动技能充能（`skillCharges` / `stats.skillChargesMax`），按 Q 触发 `triggerSkill()`。**输入分工**：左键持续触发 `tryAttack()`（射击/挥砍），右键触发 `tryRoll()`（鼠标方向翻滚 / 250ms 无敌位移 / 1s 固定 CD / 落点撞敌仍走 `onPlayerTouchEnemy` 受伤）；翻滚期间 `isRolling = true`，`update()` / `tryAttack()` / `tryRoll()` 早返回锁住其他输入。翻滚与 Q 充能/升级树完全独立。
+- **Player** — 持有 `stats` 对象（`PLAYER` 配置的可变副本）。枪是独立的精灵，跟随鼠标旋转。`muzzle` 是每帧更新的 `Vector2`，作为子弹生成点。支持无敌帧和生命回复累积。持有主动技能充能（`skillCharges` / `stats.skillChargesMax`），按 Q 触发 `triggerSkill()`。**输入分工**：左键持续触发 `tryAttack()`（射击/挥砍），右键触发 `tryRoll()`（鼠标方向翻滚 / 250ms 无敌位移 / 1s 固定 CD / 落点撞敌仍走 `onPlayerTouchEnemy` 受伤）；翻滚期间 `isRolling = true`，`update()` / `tryAttack()` / `tryRoll()` 早返回锁住其他输入。翻滚与 Q 充能/升级树完全独立。**warrior 方向系统**：warrior 精灵朝向跟随移动方向（vx/vy → south/east/north/west），静止时保持上一次朝向（`_facing`），动画 key 为方向化（如 `warrior_south_run`），west 复用 east + flipX；attack 动画在 `_doSwing()` 中触发（`repeat: 0`），播完后由 `update()` 自动切回方向化 idle/run。
 - **Enemy**（基类）— 由 `Chaser`、`Rusher`、`Shooter`、`Giant`、`Bomber`、`Mimic`、`EliteChaser`、`EliteShooter`、`EliteGiant` 继承。各自从 `ENEMY` 配置块读取行为参数。敌人在 `preUpdate` 中执行 AI（追踪/走位/射击）。`Enemy.setVelocity()` 中 `velocity *= scene.slowFactor` 实现子弹时间减速；冰霜减速通过 `frostSlowFactor / frostSlowUntil` 额外叠加（乘法叠加于 slowFactor 之上），到期后自动恢复原色。`Shooter` 使用场景的 `enemyBullets` 组发射子弹。`Giant` 使用四拍状态机（windup / swing / impact / recovery）驱动砸地 AOE，各阶段时长按 `scene.slowFactor` 缩放（与 Shooter 射击节流同模式）；重写 `knockback()` 在蓄力期间免疫击退，重写 `die()` 播放放大死亡特效。`Bomber` 使用三拍状态机（windup / jumping / leaping）驱动弹射爆炸：windUp 期间持续跟踪玩家，起跳后锁定目标直线飞行，飞行期间不可被击杀；通过 `tween.timeScale` 同步 `scene.slowFactor` 实现子弹时间减速。`Mimic` 是逃跑型敌人：伪装成宝箱在可见区域徘徊（与所有敌人不同——不在屏幕外刷出），玩家靠近或攻击时触发逃跑（恐慌加速 + 锯齿路线），双计时器超时消失；击杀保底 XP + 25% 升级 / 75% 满充能；W4+ 由 WaveManager 独立 `maybeSpawnMimic()` 刷出（非 mix 池）。精英怪（`EliteChaser` / `EliteShooter` / `EliteGiant`）复用基础纹理，通过黑身红眼 + 黑烟粒子 + 20% 体型增大区分；W10 起由 WaveManager 固定刷出（非 mix 池）。`EliteChaser` 继承 `Chaser`，HP≤60% 触发狂暴（速度提升至 Rusher 水平）。`EliteShooter` 继承 `Enemy` 内联 Shooter 行为，射击时发 3 发扇形子弹。`EliteGiant` 继承 `Giant`，在 idle 与 windup 之间插入 dash 状态——中距离时向玩家持续追踪冲刺 2 秒，冲完衔接砸地；冲刺期间生成地面烟尘粒子。
 - **Bullet / EnemyBullet** — 发射后自动飞行的弹丸，有生命周期和出界回收。玩家子弹通过 `hitSet` 追踪穿透（同一敌人只命中一次）。
 - **XPOrb** — 通过缓动实现脉冲动画，在 `XP.pickupRadius` 半径内被玩家吸引。
@@ -50,11 +50,11 @@ BootScene → MenuScene → GameScene（并行运行：HUDScene）
 
 ### 配置文件 (`src/config.js`)
 
-所有可调参数的唯一来源：玩家属性、敌人定义、波次时间、XP 曲线、`SKILL` 主动技能参数、`BULLET_TIME` / `TIME_STOP` / `ARCANE_STORM` 技能配置块、`ROLL` 翻滚配置块、升级定义。`UPGRADES` 数组包含 `apply(p)` 函数，直接修改 `Player.stats`；条目可选 `maxLevel` + `levelStat`（同一升级最多抽几次）和 `requires(player)`（解锁条件 gate）。调整游戏平衡时只需修改此文件。
+所有可调参数的唯一来源：玩家属性、敌人定义、波次时间、XP 曲线、`SKILL` 主动技能参数、`BULLET_TIME` / `TIME_STOP` / `ARCANE_STORM` 技能配置块、`ROLL` 翻滚配置块、升级定义。`CLASSES` 中可选 `sheet`（spritesheet 纹理 key）+ `sheetScale`（显示缩放），有 `sheet` 的职业使用外部 spritesheet + 4 方向动画，无 `sheet` 的使用程序化 2 帧动画。`UPGRADES` 数组包含 `apply(p)` 函数，直接修改 `Player.stats`；条目可选 `maxLevel` + `levelStat`（同一升级最多抽几次）和 `requires(player)`（解锁条件 gate）。调整游戏平衡时只需修改此文件。
 
 ### 关键约定
 
-- **精灵程序化生成，地图纹理使用外部 PNG。** 所有角色/敌人/特效精灵仍由 BootScene 程序化生成。地板纹理从 `assets/map/` 加载外部无缝 PNG，通过 tileSprite 铺满世界。W10 时通过 camera fade 过渡切换地图纹理（`GameScene.triggerMapTransition()`）。
+- **精灵程序化生成，地图纹理使用外部 PNG。** 所有角色/敌人/特效精灵由 BootScene 程序化生成，**有 spritesheet 的职业除外**。职业 spritesheet 通过 `CLASSES[classId].sheet` 配置，在 BootScene `preload()` 中通过 `load.spritesheet()` 加载。动画注册为方向化 key（`{textureKey}_south_idle/run`、`{textureKey}_east_idle/run`、`{textureKey}_north_idle/run`），west 方向复用 east + `flipX`；warrior 额外有 `warrior_attack`。Player 通过 `_hasSheet` 标志走方向化动画分支（`_facing` + flipX），无 sheet 的职业走原 2 帧程序化动画。地板纹理从 `assets/map/` 加载外部无缝 PNG，通过 tileSprite 铺满世界。W10 时通过 camera fade 过渡切换地图纹理（`GameScene.triggerMapTransition()`）。
 - **场景通信** 使用 Phaser 场景管理器（`scene.get()`、`scene.pause()`、`scene.launch()`、带数据的 `scene.start()`）。不使用事件总线。
 - **`GameScene.handleEnemyDeath()`** 由 `Enemy.die()` 通过场景引用调用 — 这是生成 XP 球和追踪击杀数的钩子。
 - **主动技能钩子** — `Player.triggerSkill()` 调 `this.scene.useSkill?.(this)`，仅在 `useSkill` 返回非 false 时消耗资源；`GameScene.useSkill(player)` 优先按 `player.stats.skillId` 分派，回退到 `CLASSES[classId].skill`（shockwave / bullet_time / time_stop）。技能可走充能制（默认 1，`stats.skillCost` 可覆盖）或独立实时冷却制（如 time_stop 用 `Player.timeStopReadyAt` + `TIME_STOP.cooldownMs`）。`useSkill` 返回值约定：`false` = 失败不扣充能；`true` / `undefined` = 扣默认 cost；`number` = 扣该数值充能（如奥术风暴返回 3）。

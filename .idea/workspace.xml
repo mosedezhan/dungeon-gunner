@@ -4,7 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="23a3152e-8315-442b-ac3a-2f6155071789" name="更改" comment="" />
+    <list default="true" id="23a3152e-8315-442b-ac3a-2f6155071789" name="更改" comment="">
+      <change beforePath="$PROJECT_DIR$/.claude/settings.local.json" beforeDir="false" afterPath="$PROJECT_DIR$/.claude/settings.local.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CLAUDE.md" beforeDir="false" afterPath="$PROJECT_DIR$/CLAUDE.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/entities/Player.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/entities/Player.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/scenes/BootScene.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/scenes/BootScene.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/scenes/ClassSelectScene.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/scenes/ClassSelectScene.js" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />

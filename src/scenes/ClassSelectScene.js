@@ -57,11 +57,17 @@ export class ClassSelectScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     // Sprite (idle animation)
-    const spriteKey = cls.textureKey + '_idle_a';
-    const sprite = this.add.sprite(0, -10, spriteKey).setScale(4);
-    if (!cls.locked) {
-      const animKey = cls.textureKey === 'mage' ? 'mage_idle' : 'player_idle';
-      sprite.play(animKey);
+    let sprite;
+    if (cls.sheet) {
+      sprite = this.add.sprite(0, -10, cls.sheet, 0).setScale(1.5);
+      if (!cls.locked) sprite.play(cls.textureKey + '_south_idle');
+    } else {
+      const spriteKey = cls.textureKey + '_idle_a';
+      sprite = this.add.sprite(0, -10, spriteKey).setScale(4);
+      if (!cls.locked) {
+        const animKey = cls.textureKey === 'mage' ? 'mage_idle' : 'player_idle';
+        sprite.play(animKey);
+      }
     }
 
     // Description

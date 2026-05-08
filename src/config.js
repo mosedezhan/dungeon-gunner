@@ -112,6 +112,8 @@ export const CLASSES = {
     textureKey: 'mage',
     skill: 'shockwave',
     color: 0x4488ff,
+    sheet: 'mage_sheet',
+    sheetScale: 0.6,
   },
   warrior: {
     id: 'warrior',
@@ -119,6 +121,8 @@ export const CLASSES = {
     description: '近战挥砍 / 子弹时间',
     textureKey: 'warrior',
     skill: 'bullet_time',
+    sheet: 'warrior_sheet',
+    sheetScale: 0.6,
     color: 0xc8442a,
     baseStats: {
       maxHp: 120000,

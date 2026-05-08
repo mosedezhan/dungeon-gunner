@@ -4,10 +4,16 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y, classId = 'player') {
     const cls = CLASSES[classId];
     const texturePrefix = cls?.textureKey ?? 'player';
-    super(scene, x, y, texturePrefix + '_idle_a');
+    const sheet = cls?.sheet;
+    super(scene, x, y, sheet ?? texturePrefix + '_idle_a');
     scene.add.existing(this);
     scene.physics.add.existing(this);
-    this.setScale(2);
+    if (sheet) {
+      this.setFrame(0);
+      this.setScale(cls.sheetScale ?? 0.5);
+    } else {
+      this.setScale(2);
+    }
     this.setDepth(10);
     this.setCollideWorldBounds(true);
 
@@ -17,6 +23,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     this.classId = classId;
     this.texturePrefix = texturePrefix;
+    this._hasSheet = !!sheet;
+    this._facing = 'south';
     this.stats = { ...PLAYER, ...(cls?.baseStats ?? {}) };
     this.hp = this.stats.maxHp;
     this.level = 1;
@@ -53,7 +61,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     });
     this.cursors = scene.input.keyboard.createCursorKeys();
 
-    this.play(this.texturePrefix + '_idle');
+    this.play(sheet ? texturePrefix + '_south_idle' : texturePrefix + '_idle');
   }
 
   update(time, delta) {
@@ -72,7 +80,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.weapon.rotation = angle;
         this.weapon.setFlipY(Math.abs(angle) > Math.PI / 2);
       }
-      this.flipX = world.x < this.x;
+      this.flipX = this._hasSheet ? this._facing === 'west' : world.x < this.x;
       if (this.classId !== 'warrior') {
         const barrelLen = 24;
         this.muzzle.set(
@@ -85,19 +93,39 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     const k = this.keys, c = this.cursors;
     let vx = 0, vy = 0;
-    if (k.A.isDown || c.left.isDown)  vx -= 1;
+    if (k.A.isDown || c.left.isDown) vx -= 1;
     if (k.D.isDown || c.right.isDown) vx += 1;
-    if (k.W.isDown || c.up.isDown)    vy -= 1;
-    if (k.S.isDown || c.down.isDown)  vy += 1;
+    if (k.W.isDown || c.up.isDown) vy -= 1;
+    if (k.S.isDown || c.down.isDown) vy += 1;
 
     const moving = vx !== 0 || vy !== 0;
     if (moving) {
       const inv = 1 / Math.hypot(vx, vy);
       this.setVelocity(vx * inv * this.stats.moveSpeed, vy * inv * this.stats.moveSpeed);
-      if (this.anims.currentAnim?.key !== this.texturePrefix + '_run') this.play(this.texturePrefix + '_run');
     } else {
       this.setVelocity(0, 0);
-      if (this.anims.currentAnim?.key !== this.texturePrefix + '_idle') this.play(this.texturePrefix + '_idle');
+    }
+
+    if (this._hasSheet) {
+      if (moving) {
+        if (Math.abs(vy) >= Math.abs(vx)) {
+          this._facing = vy > 0 ? 'south' : 'north';
+        } else {
+          this._facing = vx > 0 ? 'east' : 'west';
+        }
+      }
+      const dir = this._facing;
+      const flipX = dir === 'west';
+      this.flipX = flipX;
+      const animDir = flipX ? 'east' : dir;
+      const animKey = `${this.texturePrefix}_${animDir}_${moving ? 'run' : 'idle'}`;
+      if (this.anims.currentAnim?.key !== animKey) this.play(animKey);
+    } else {
+      if (moving) {
+        if (this.anims.currentAnim?.key !== this.texturePrefix + '_run') this.play(this.texturePrefix + '_run');
+      } else {
+        if (this.anims.currentAnim?.key !== this.texturePrefix + '_idle') this.play(this.texturePrefix + '_idle');
+      }
     }
 
     // Aim
@@ -113,7 +141,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       this.weapon.rotation = angle;
       this.weapon.setFlipY(Math.abs(angle) > Math.PI / 2);
     }
-    this.flipX = world.x < this.x;
+    if (!this._hasSheet) this.flipX = world.x < this.x;
 
     this._weaponRestOffset *= Math.pow(0.0005, delta / 1000);
 
@@ -149,6 +177,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   _doSwing(time) {
     if (time - this.lastSwingAt < this.stats.attackRateMs) return;
     this.lastSwingAt = time;
+    if (this.classId === 'warrior') {
+      this.play('warrior_attack');
+      this.flipX = Math.cos(this._aimAngle) > 0;
+    }
     this.scene.performSwing?.(this, this._aimAngle);
   }
 
@@ -252,11 +284,13 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     this._spawnRollDust();
 
-    const ghostKey = this.texturePrefix + '_run_a';
+    const cls = CLASSES[this.classId];
+    const sheetKey = cls?.sheet;
+    const ghostKey = sheetKey ?? this.texturePrefix + '_run_a';
     this._afterimageTimer = this.scene.time.addEvent({
       delay: ROLL.afterimageIntervalMs,
       loop: true,
-      callback: () => this._spawnAfterimage(ghostKey),
+      callback: () => this._spawnAfterimage(ghostKey, !!sheetKey),
     });
 
     this.scene.time.delayedCall(ROLL.durationMs, () => this._endRoll());
@@ -288,13 +322,15 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     });
   }
 
-  _spawnAfterimage(key) {
+  _spawnAfterimage(key, usesSheet = false) {
     if (!this.scene || this.dead) return;
+    const s = this.scaleX;
     const ghost = this.scene.add.image(this.x, this.y, key)
-      .setScale(2).setDepth(9).setAlpha(0.5)
+      .setScale(s).setDepth(9).setAlpha(0.5)
       .setFlipX(this.flipX);
+    if (usesSheet) ghost.setFrame(this.frame.name);
     this.scene.tweens.add({
-      targets: ghost, alpha: 0, scale: 1.7,
+      targets: ghost, alpha: 0, scale: s * 0.85,
       duration: ROLL.afterimageDurationMs,
       onComplete: () => ghost.destroy(),
     });
