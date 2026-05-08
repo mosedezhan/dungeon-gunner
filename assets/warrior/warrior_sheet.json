@@ -1,0 +1,14 @@
+{
+  "id": "warrior",
+  "frameWidth": 48,
+  "frameHeight": 48,
+  "framesPerDirection": 9,
+  "rowOrder": [
+    "north",
+    "east",
+    "south",
+    "west"
+  ],
+  "sheet": "assets/warrior/warrior_sheet.png",
+  "mirrored": null
+}

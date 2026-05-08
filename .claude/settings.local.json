@@ -55,7 +55,10 @@
       "Bash(node --check src/scenes/GameScene.js)",
       "Bash(node --check src/scenes/UpgradeScene.js)",
       "Bash(node --input-type=module --check)",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(npm --version)",
+      "Bash(npm install *)",
+      "PowerShell(Move-Item *)"
     ]
   }
 }

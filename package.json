@@ -1,0 +1,13 @@
+{
+  "name": "dungeon-gunner-tools",
+  "version": "0.0.0",
+  "private": true,
+  "description": "开发期工具链。运行时仍由 index.html 直接加载 ES 模块、Phaser 走 CDN，无构建步骤。本 package.json 仅服务于 tools/ 下的离线脚本（如雪碧图打包）。",
+  "type": "module",
+  "scripts": {
+    "pack-sprites": "node tools/pack-sprites.mjs"
+  },
+  "devDependencies": {
+    "sharp": "^0.32.6"
+  }
+}
