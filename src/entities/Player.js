@@ -1,4 +1,4 @@
-import { PLAYER, CLASSES, TIME_STOP } from '../config.js';
+import { PLAYER, CLASSES, TIME_STOP, ROLL } from '../config.js';
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y, classId = 'player') {
@@ -31,6 +31,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.skillCharges = 0;
     this.timeStopReadyAt = 0;
 
+    this.isRolling = false;
+    this.lastRollAt = -Infinity;
+    this._rollVelX = 0;
+    this._rollVelY = 0;
+    this._afterimageTimer = null;
+
     const weaponKey = classId === 'warrior' ? 'sword' : 'gun';
     this.weapon = scene.add.sprite(x, y, weaponKey).setOrigin(0.15, 0.5).setDepth(11).setScale(2);
     this.gun = this.weapon;
@@ -52,6 +58,30 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
   update(time, delta) {
     if (this.dead) return;
+
+    if (this.isRolling) {
+      this.setVelocity(this._rollVelX, this._rollVelY);
+      const p = this.scene.input.activePointer;
+      const world = p.positionToCamera(this.scene.cameras.main);
+      const angle = Math.atan2(world.y - this.y, world.x - this.x);
+      this._aimAngle = angle;
+      const offsetY = 6;
+      this.weapon.x = this.x - Math.cos(angle) * this._weaponRestOffset;
+      this.weapon.y = this.y + offsetY - Math.sin(angle) * this._weaponRestOffset;
+      if (!this._swingActive) {
+        this.weapon.rotation = angle;
+        this.weapon.setFlipY(Math.abs(angle) > Math.PI / 2);
+      }
+      this.flipX = world.x < this.x;
+      if (this.classId !== 'warrior') {
+        const barrelLen = 24;
+        this.muzzle.set(
+          this.weapon.x + Math.cos(angle) * barrelLen,
+          this.weapon.y + Math.sin(angle) * barrelLen
+        );
+      }
+      return;
+    }
 
     const k = this.keys, c = this.cursors;
     let vx = 0, vy = 0;
@@ -107,6 +137,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
   tryAttack(time) {
     if (this.dead) return;
+    if (this.isRolling) return;
     if (this.classId === 'warrior') this._doSwing(time);
     else this._doShoot(time);
   }
@@ -160,6 +191,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   die() {
     if (this.dead) return;
     this.dead = true;
+    this.isRolling = false;
+    if (this._afterimageTimer) {
+      this._afterimageTimer.remove();
+      this._afterimageTimer = null;
+    }
     this.setVelocity(0, 0);
     this.body.enable = false;
     this.scene.tweens.add({
@@ -194,5 +230,73 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     const before = this.skillCharges;
     this.skillCharges = Math.min(this.stats.skillChargesMax, this.skillCharges + n);
     return this.skillCharges > before;
+  }
+
+  tryRoll(time) {
+    if (this.dead) return false;
+    if (this.isRolling) return false;
+    if (time - this.lastRollAt < ROLL.cooldownMs) return false;
+
+    const p = this.scene.input.activePointer;
+    const world = p.positionToCamera(this.scene.cameras.main);
+    const dx = world.x - this.x;
+    const dy = world.y - this.y;
+    const angle = Math.hypot(dx, dy) < 1 ? this._aimAngle : Math.atan2(dy, dx);
+
+    this.isRolling = true;
+    this.lastRollAt = time;
+    this._rollVelX = Math.cos(angle) * ROLL.speed;
+    this._rollVelY = Math.sin(angle) * ROLL.speed;
+    this.invulnUntil = Math.max(this.invulnUntil, time + ROLL.durationMs);
+    this.setTintFill(ROLL.iframeTint);
+
+    this._spawnRollDust();
+
+    const ghostKey = this.texturePrefix + '_run_a';
+    this._afterimageTimer = this.scene.time.addEvent({
+      delay: ROLL.afterimageIntervalMs,
+      loop: true,
+      callback: () => this._spawnAfterimage(ghostKey),
+    });
+
+    this.scene.time.delayedCall(ROLL.durationMs, () => this._endRoll());
+    return true;
+  }
+
+  _endRoll() {
+    if (this.dead || !this.isRolling) return;
+    this.isRolling = false;
+    if (this._afterimageTimer) {
+      this._afterimageTimer.remove();
+      this._afterimageTimer = null;
+    }
+    this.clearTint();
+    this._spawnRollDust();
+    this.setVelocity(0, 0);
+  }
+
+  _spawnRollDust() {
+    const dust = this.scene.add.image(this.x, this.y, 'shockwave')
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setTint(ROLL.dustTint)
+      .setDepth(8)
+      .setScale(0.3).setAlpha(0.6);
+    this.scene.tweens.add({
+      targets: dust, scale: 1.0, alpha: 0,
+      duration: 180, ease: 'Cubic.easeOut',
+      onComplete: () => dust.destroy(),
+    });
+  }
+
+  _spawnAfterimage(key) {
+    if (!this.scene || this.dead) return;
+    const ghost = this.scene.add.image(this.x, this.y, key)
+      .setScale(2).setDepth(9).setAlpha(0.5)
+      .setFlipX(this.flipX);
+    this.scene.tweens.add({
+      targets: ghost, alpha: 0, scale: 1.7,
+      duration: ROLL.afterimageDurationMs,
+      onComplete: () => ghost.destroy(),
+    });
   }
 }

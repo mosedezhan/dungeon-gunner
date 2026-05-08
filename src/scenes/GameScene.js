@@ -51,6 +51,13 @@ export class GameScene extends Phaser.Scene {
     });
     this.input.keyboard.on('keydown-F1', (e) => { e.preventDefault(); this.openDebug(); });
 
+    this.input.mouse.disableContextMenu();
+    this.input.on('pointerdown', (pointer) => {
+      if (pointer.button !== 2) return;
+      if (!this.scene.isActive() || this.player.dead) return;
+      this.player.tryRoll(this.time.now);
+    });
+
     this.scene.launch('HUDScene');
 
     if (data?.debug) {
@@ -637,6 +644,6 @@ export class GameScene extends Phaser.Scene {
   update(time, delta) {
     this.player.update(time, delta);
     this.waveManager.update(time, delta);
-    if (this.input.activePointer.isDown) this.player.tryAttack(this.time.now);
+    if (this.input.activePointer.leftButtonDown()) this.player.tryAttack(this.time.now);
   }
 }

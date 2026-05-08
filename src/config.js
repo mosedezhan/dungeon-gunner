@@ -30,6 +30,16 @@ export const BULLET = {
   radius: 3,
 };
 
+export const ROLL = {
+  durationMs: 250,
+  speed: 600,
+  cooldownMs: 1000,
+  iframeTint: 0x88ccff,
+  dustTint: 0xaaaaaa,
+  afterimageIntervalMs: 50,
+  afterimageDurationMs: 200,
+};
+
 export const ENEMY = {
   chaser: { hp: 20, speed: 70, contactDamage: 10, radius: 8, xp: 1, tint: 0x6faa4a, bodyTint: 0x3d6b2a },
   rusher: { hp: 12, speed: 140, contactDamage: 8, radius: 6, xp: 2, tint: 0xd9c04a, bodyTint: 0x8a742a },
