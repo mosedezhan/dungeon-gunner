@@ -50,6 +50,18 @@
 
 <!-- 真实条目请加在下方，删除上面的示例条目 -->
 
+## 2026-05-08 翻滚 baseline
+
+- **改动**：新增 `ROLL` 配置块（非纯数值调整，走 OpenSpec change `add-roll-dodge`）
+  - `durationMs`: 250（位移持续 + 无敌窗口）
+  - `speed`: 600 px/s（实际位移 ≈ 150 px，约 5 个玩家身位）
+  - `cooldownMs`: 1000（固定，不入升级树）
+  - `iframeTint`: 0x88ccff（淡蓝，区别 hurt 白闪 / frost 强蓝）
+- **why**：右键基础动作，给两职业补一个"短无敌位移"维度。落点撞敌人吃 contactDamage 是有意的风险机制。
+- **after-feel**：默认参数手感符合预期——150 px 位移足够脱离 chaser/rusher 接触距离；1s CD 在多敌围攻时不会感到"按了等下一个"的卡顿；mage 落点陷阱（鼠标对敌人时翻进去吃伤）实战中能观察到，但靠"先转视线"可规避，符合"思考再行动"的设计意图。无需调整。
+
+---
+
 ---
 
 ## 2026-04-30 范例：把 /balance-review 输出嵌入 after-feel
