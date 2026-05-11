@@ -345,6 +345,17 @@ export class BootScene extends Phaser.Scene {
     this.load.spritesheet('mage_sheet', 'assets/mage/mage_sheet.png', {
       frameWidth: 128, frameHeight: 128,
     });
+
+    // UI spritesheets
+    this.load.spritesheet('ui_icons', 'assets/ui/icons.png', {
+      frameWidth: 32, frameHeight: 32,
+    });
+    this.load.spritesheet('ui_icons2', 'assets/ui/icons2.png', {
+      frameWidth: 32, frameHeight: 32,
+    });
+    this.load.spritesheet('ui_menu', 'assets/ui/menu_icons.png', {
+      frameWidth: 64, frameHeight: 64,
+    });
   }
 
   create() {
@@ -528,6 +539,23 @@ export class BootScene extends Phaser.Scene {
     smokeG.fillStyle(0x444444, 0.3); smokeG.fillCircle(5, 5, 3);
     smokeG.generateTexture('elite_smoke', 10, 10);
     smokeG.destroy();
+
+    // Frost zone: blue translucent circle for frost field
+    const fz = this.add.graphics().setVisible(false);
+    fz.fillStyle(0x4488ff, 0.25); fz.fillCircle(32, 32, 30);
+    fz.lineStyle(2, 0x88ccff, 0.6); fz.strokeCircle(32, 32, 28);
+    fz.lineStyle(1, 0xaaddff, 0.4); fz.strokeCircle(32, 32, 24);
+    fz.generateTexture('frost_zone', 64, 64);
+    fz.destroy();
+
+    // Ice spike: diamond crystal shape for blizzard
+    const isp = this.add.graphics().setVisible(false);
+    isp.fillStyle(0x88ccff, 1);
+    isp.beginPath(); isp.moveTo(6, 0); isp.lineTo(12, 8); isp.lineTo(6, 20); isp.lineTo(0, 8); isp.closePath(); isp.fillPath();
+    isp.fillStyle(0xffffff, 0.7);
+    isp.beginPath(); isp.moveTo(6, 2); isp.lineTo(10, 8); isp.lineTo(6, 14); isp.lineTo(2, 8); isp.closePath(); isp.fillPath();
+    isp.generateTexture('ice_spike', 12, 20);
+    isp.destroy();
 
     // Time-stop clock face: dark bronze rim, ivory dial, roman markers, no hand
     const CLOCK = 96;

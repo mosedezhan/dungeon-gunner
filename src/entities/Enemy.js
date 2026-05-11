@@ -15,13 +15,28 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.knockUntil = 0;
     this.frostSlowFactor = 1;
     this.frostSlowUntil = 0;
+    this.frozenUntil = 0;
+    this.chillStacks = 0;
+    this._lastChillStack = 0;
   }
 
   takeDamage(amount) {
     if (this.dead) return;
+    const now = this.scene?.time?.now ?? 0;
+    const isFrozen = now < this.frozenUntil;
+    const isFrostMarked = now < this.frostSlowUntil;
+    const p = this.scene?.player;
+    if ((isFrozen || isFrostMarked) && p?.stats?.shatterLevel) {
+      amount *= 1 + 0.6;
+    }
     this.hp -= amount;
     this.setTintFill(0xffffff);
-    this.scene.time.delayedCall(60, () => { if (!this.dead && this.active) this.clearTint(); });
+    this.scene.time.delayedCall(60, () => {
+      if (this.dead || !this.active) return;
+      this.clearTint();
+      if (this.scene.time.now < this.frozenUntil) this.setTint(0xffffff);
+      else if (this.scene.time.now < this.frostSlowUntil) this.setTint(0x88ccff);
+    });
     if (this.hp <= 0) this.die();
   }
 
@@ -32,6 +47,9 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   }
 
   setVelocity(x, y) {
+    if (this.scene && this.scene.time.now < this.frozenUntil) {
+      return super.setVelocity(0, 0);
+    }
     let sf = this.scene?.slowFactor ?? 1;
     if (this.scene && this.scene.time.now < this.frostSlowUntil) {
       sf *= this.frostSlowFactor;

@@ -1,4 +1,4 @@
-import { GAME, SKILL, WORLD, CLASSES, WARRIOR, BULLET_TIME, TIME_STOP, ARCANE_STORM } from '../config.js';
+import { GAME, SKILL, WORLD, CLASSES, WARRIOR, BULLET_TIME, TIME_STOP, ARCANE_STORM, FROST } from '../config.js';
 import { Player } from '../entities/Player.js';
 import { Bullet } from '../entities/Bullet.js';
 import { EnemyBullet } from '../entities/EnemyBullet.js';
@@ -37,6 +37,8 @@ export class GameScene extends Phaser.Scene {
     this.kills = 0;
     this.slowFactor = 1;
     this._bulletTimeVignette = null;
+    this._frostZones = [];
+    this._blizzardTimer = 0;
     this.waveManager = new WaveManager(this);
 
     // Camera setup: smooth follow with boundary constraint
@@ -130,6 +132,12 @@ export class GameScene extends Phaser.Scene {
     if (bullet.hitSet.has(enemy)) return;
     enemy.takeDamage(bullet.damage);
     enemy.knockback(bullet.x, bullet.y, 140);
+    const fbl = this.player.stats.frostBulletLevel ?? 0;
+    if (fbl > 0 && !enemy.dead) {
+      enemy.frostSlowFactor = FROST.bulletSlowFactors[fbl];
+      enemy.frostSlowUntil = this.time.now + FROST.bulletSlowDurationMs;
+      enemy.setTint(FROST.bulletMarkTint);
+    }
     bullet.onHit(enemy);
   }
 
@@ -444,7 +452,9 @@ export class GameScene extends Phaser.Scene {
 
   fireShockwave(x, y) {
     const p = this.player;
-    const frostLevel = p.stats.frostLevel ?? 0;
+    const frostBulletLevel = p.stats.frostBulletLevel ?? 0;
+    const frostNovaLevel = p.stats.frostNovaLevel ?? 0;
+    const frostFieldLevel = p.stats.frostFieldLevel ?? 0;
     const siphonLevel = p.stats.siphonLevel ?? 0;
 
     this.enemyBullets.getChildren().forEach(b => { if (b.active) b.kill(); });
@@ -453,21 +463,34 @@ export class GameScene extends Phaser.Scene {
       const d = Phaser.Math.Distance.Between(x, y, e.x, e.y);
       if (d < SKILL.knockbackRadius) {
         e.takeDamage(e.maxHp * SKILL.damagePercent);
-        if (!e.dead) e.knockback(x, y, SKILL.knockbackForce);
+        if (!e.dead) {
+          e.knockback(x, y, SKILL.knockbackForce);
 
-        // Frost slow
-        if (frostLevel > 0 && !e.dead) {
-          e.frostSlowFactor = ARCANE_STORM.frostSlowFactors[frostLevel];
-          e.frostSlowUntil = this.time.now + ARCANE_STORM.frostDurationsMs[frostLevel];
-          e.setTint(ARCANE_STORM.frostTint);
-        }
+          // Frost nova: freeze
+          if (frostNovaLevel > 0) {
+            e.frozenUntil = this.time.now + FROST.novaFreezeMs[frostNovaLevel];
+            e.setTint(FROST.novaFreezeTint);
+          }
+          // Frost bullet: slow (applied via shockwave too)
+          if (frostBulletLevel > 0 && frostNovaLevel === 0) {
+            e.frostSlowFactor = FROST.bulletSlowFactors[frostBulletLevel];
+            e.frostSlowUntil = this.time.now + FROST.bulletSlowDurationMs;
+            e.setTint(FROST.bulletMarkTint);
+          }
 
-        // Mana siphon: green flash + siphon orbs
-        if (siphonLevel > 0 && !e.dead) {
-          this._spawnSiphonVfx(e.x, e.y, p, siphonLevel, e.cfg.xp);
+          // Siphon
+          if (siphonLevel > 0) {
+            this._spawnSiphonVfx(e.x, e.y, p, siphonLevel, e.cfg.xp);
+          }
         }
       }
     });
+
+    // Frost field zone
+    if (frostFieldLevel > 0) {
+      this._createFrostZone(x, y);
+    }
+
     this._spawnShockwaveVfx(x, y);
     this.cameras.main.shake(120, 0.004);
   }
@@ -522,12 +545,27 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
+  _createFrostZone(x, y) {
+    const permafrost = this.player.stats.permafrostLevel ?? 0;
+    const duration = FROST.fieldDurationMs * (permafrost ? FROST.permafrostDurationMult : 1);
+    const visual = this.add.image(x, y, 'frost_zone')
+      .setDepth(1)
+      .setAlpha(0.3)
+      .setScale(FROST.fieldRadius / 32);
+    const zone = { x, y, radius: FROST.fieldRadius, until: this.time.now + duration, visual };
+    this._frostZones.push(zone);
+    this.time.delayedCall(Math.max(0, duration - 400), () => {
+      if (visual.scene) this.tweens.add({ targets: visual, alpha: 0, duration: 400, onComplete: () => visual.destroy() });
+    });
+  }
+
   fireArcaneStorm(x, y) {
     if (this._arcaneStormActive) return false;
     this._arcaneStormActive = true;
 
     const p = this.player;
-    const frostLevel = p.stats.frostLevel ?? 0;
+    const frostBulletLevel = p.stats.frostBulletLevel ?? 0;
+    const frostNovaLevel = p.stats.frostNovaLevel ?? 0;
     const siphonLevel = p.stats.siphonLevel ?? 0;
     const pulseCount = ARCANE_STORM.pulseCount;
 
@@ -574,10 +612,14 @@ export class GameScene extends Phaser.Scene {
             if (!e.dead) e.knockback(px, py, ARCANE_STORM.knockbackForce);
 
             // Inherit frost
-            if (frostLevel > 0 && !e.dead) {
-              e.frostSlowFactor = ARCANE_STORM.frostSlowFactors[frostLevel];
-              e.frostSlowUntil = this.time.now + ARCANE_STORM.frostDurationsMs[frostLevel];
-              e.setTint(ARCANE_STORM.frostTint);
+            if (frostBulletLevel > 0 && !e.dead) {
+              e.frostSlowFactor = FROST.bulletSlowFactors[frostBulletLevel];
+              e.frostSlowUntil = this.time.now + FROST.bulletSlowDurationMs;
+              if (frostNovaLevel === 0) e.setTint(FROST.bulletMarkTint);
+            }
+            if (frostNovaLevel > 0 && !e.dead) {
+              e.frozenUntil = this.time.now + FROST.novaFreezeMs[frostNovaLevel];
+              e.setTint(FROST.novaFreezeTint);
             }
 
             // Inherit siphon
@@ -645,5 +687,75 @@ export class GameScene extends Phaser.Scene {
     this.player.update(time, delta);
     this.waveManager.update(time, delta);
     if (this.input.activePointer.leftButtonDown()) this.player.tryAttack(this.time.now);
+    this._updateFrostZones(time);
+    this._updateBlizzard(time);
+  }
+
+  _updateFrostZones(time) {
+    this._frostZones = this._frostZones.filter(z => {
+      if (time >= z.until) {
+        if (z.visual?.scene) z.visual.destroy();
+        return false;
+      }
+      return true;
+    });
+    const permafrost = this.player.stats.permafrostLevel ?? 0;
+    for (const zone of this._frostZones) {
+      this.enemies.getChildren().forEach(e => {
+        if (e.dead || !e.active) return;
+        const d = Phaser.Math.Distance.Between(zone.x, zone.y, e.x, e.y);
+        if (d < zone.radius) {
+          e.frostSlowFactor = FROST.fieldSlowFactor;
+          e.frostSlowUntil = time + 500;
+          if (permafrost > 0) {
+            if (!e._lastChillStack || time - e._lastChillStack > 1000) {
+              e.chillStacks = (e.chillStacks ?? 0) + 1;
+              e._lastChillStack = time;
+              if (e.chillStacks >= FROST.permafrostChillMax) {
+                e.frozenUntil = time + FROST.permafrostChillFreezeMs;
+                e.setTint(0xffffff);
+                e.chillStacks = 0;
+              }
+            }
+          }
+        }
+      });
+    }
+  }
+
+  _updateBlizzard(time) {
+    const bl = this.player.stats.blizzardLevel ?? 0;
+    if (!bl || this.player.dead) return;
+    if (time < this._blizzardTimer) return;
+    this._blizzardTimer = time + FROST.blizzardIntervalMs;
+
+    const active = this.enemies.getChildren().filter(e => e.active && !e.dead);
+    if (active.length === 0) return;
+    const target = Phaser.Utils.Array.GetRandom(active);
+
+    const spike = this.add.image(target.x, target.y - 30, 'ice_spike')
+      .setDepth(20).setScale(0).setTint(0x88ccff);
+    this.tweens.add({
+      targets: spike, y: target.y, scale: 1.5,
+      duration: 150, ease: 'Cubic.easeIn',
+      onComplete: () => {
+        this.enemies.getChildren().forEach(e => {
+          if (e.dead) return;
+          const d = Phaser.Math.Distance.Between(target.x, target.y, e.x, e.y);
+          if (d < FROST.blizzardRadius) {
+            e.takeDamage(this.player.stats.damage * FROST.blizzardDamage);
+            const fbl = this.player.stats.frostBulletLevel ?? 1;
+            e.frostSlowFactor = FROST.bulletSlowFactors[fbl];
+            e.frostSlowUntil = this.time.now + FROST.bulletSlowDurationMs;
+            e.setTint(FROST.bulletMarkTint);
+          }
+        });
+        const impact = this.add.image(target.x, target.y, 'frost_zone')
+          .setBlendMode(Phaser.BlendModes.ADD).setDepth(20)
+          .setScale(0.5).setTint(0x88ccff).setAlpha(0.8);
+        this.tweens.add({ targets: impact, scale: 2, alpha: 0, duration: 200, onComplete: () => impact.destroy() });
+        spike.destroy();
+      },
+    });
   }
 }

@@ -181,6 +181,24 @@ export const ARCANE_STORM = {
   siphonLineDurationMs: 300,
 };
 
+export const FROST = {
+  bulletSlowFactors: [1, 0.8, 0.7, 0.6],
+  bulletSlowDurationMs: 1500,
+  bulletMarkTint: 0x88ccff,
+  novaFreezeMs: [0, 500, 1000],
+  novaFreezeTint: 0xffffff,
+  fieldRadius: 80,
+  fieldDurationMs: 4000,
+  fieldSlowFactor: 0.5,
+  shatterBonus: 0.6,
+  blizzardIntervalMs: 3000,
+  blizzardDamage: 0.8,
+  blizzardRadius: 40,
+  permafrostDurationMult: 3,
+  permafrostChillMax: 5,
+  permafrostChillFreezeMs: 2000,
+};
+
 export const TIME_STOP = {
   cooldownMs: 15000,
   durationMs: 5000,
@@ -245,9 +263,46 @@ export const UPGRADES = [
     },
   },
   {
-    id: 'frost_nova', name: '冰霜新星', desc: '冲击波附带减速',
-    classes: ['mage'], maxLevel: 2, levelStat: 'frostLevel',
-    apply: p => { p.stats.frostLevel = (p.stats.frostLevel ?? 0) + 1; },
+    id: 'frost_bullet', name: '冰晶弹', desc: '子弹附加减速 (20/30/40%)',
+    classes: ['mage'], tier: 1, path: 'frost',
+    maxLevel: 3, levelStat: 'frostBulletLevel',
+    prerequisites: [],
+    apply: p => { p.stats.frostBulletLevel = (p.stats.frostBulletLevel ?? 0) + 1; },
+  },
+  {
+    id: 'frost_nova', name: '冰霜新星', desc: '冲击波冻结敌人 (0.5/1.0)s',
+    classes: ['mage'], tier: 2, path: 'frost',
+    maxLevel: 2, levelStat: 'frostNovaLevel',
+    prerequisites: [{ stat: 'frostBulletLevel', min: 1 }],
+    apply: p => { p.stats.frostNovaLevel = (p.stats.frostNovaLevel ?? 0) + 1; },
+  },
+  {
+    id: 'frost_field', name: '极寒领域', desc: '冲击波留下冰面减速区域',
+    classes: ['mage'], tier: 3, path: 'frost',
+    maxLevel: 1, levelStat: 'frostFieldLevel',
+    prerequisites: [{ stat: 'frostNovaLevel', min: 1 }],
+    apply: p => { p.stats.frostFieldLevel = 1; },
+  },
+  {
+    id: 'shatter', name: '碎冰', desc: '对冻结/减速敌人 +60% 伤害',
+    classes: ['mage'], tier: 3, path: 'frost',
+    maxLevel: 1, levelStat: 'shatterLevel',
+    prerequisites: [{ stat: 'frostNovaLevel', min: 1 }],
+    apply: p => { p.stats.shatterLevel = 1; },
+  },
+  {
+    id: 'blizzard', name: '暴风雪', desc: '每 3s 召唤冰锥坠落',
+    classes: ['mage'], tier: 4, path: 'frost',
+    maxLevel: 1, levelStat: 'blizzardLevel',
+    prerequisites: [{ stat: 'frostFieldLevel', min: 1 }],
+    apply: p => { p.stats.blizzardLevel = 1; },
+  },
+  {
+    id: 'permafrost', name: '永冻', desc: '冰面持续 ×3，叠层冻结',
+    classes: ['mage'], tier: 4, path: 'frost',
+    maxLevel: 1, levelStat: 'permafrostLevel',
+    prerequisites: [{ stat: 'frostFieldLevel', min: 1 }],
+    apply: p => { p.stats.permafrostLevel = 1; },
   },
   {
     id: 'mana_siphon', name: '法力虹吸', desc: '冲击波吸取经验',
@@ -258,7 +313,7 @@ export const UPGRADES = [
     id: 'arcane_storm', name: '奥术风暴', desc: '5 次冲击波脉冲 — 消耗 3 充能',
     classes: ['mage'], maxLevel: 1, levelStat: 'hasArcaneStorm',
     requires: p => {
-      const frost = p.stats.frostLevel ?? 0;
+      const frost = p.stats.frostBulletLevel ?? 0;
       const siphon = p.stats.siphonLevel ?? 0;
       return (frost + siphon) >= 3;
     },

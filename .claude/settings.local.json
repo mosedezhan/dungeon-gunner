@@ -60,7 +60,13 @@
       "Bash(npm install *)",
       "PowerShell(Move-Item *)",
       "PowerShell(Add-Type -AssemblyName System.Drawing; $img = [System.Drawing.Image]::FromFile\\(\\(Resolve-Path 'D:\\\\web-learning\\\\范例\\\\dungeon-gunner\\\\assets\\\\warrior2\\\\south\\\\frame_000.png'\\).Path\\); \"size=$\\($img.Width\\)x$\\($img.Height\\) format=$\\($img.PixelFormat\\)\"; $img.Dispose\\(\\))",
-      "Bash(pip install *)"
+      "Bash(pip install *)",
+      "WebSearch",
+      "Bash(python3 -c ' *)",
+      "Bash(python -c ' *)",
+      "Bash(cp D:/web-learning/范例/dungeon-gunner/Free_Medieval_Fantasy_UI_Pack/Assets/icons.png D:/web-learning/范例/dungeon-gunner/assets/ui/icons.png)",
+      "Bash(cp D:/web-learning/范例/dungeon-gunner/Free_Medieval_Fantasy_UI_Pack/Assets/icons2.png D:/web-learning/范例/dungeon-gunner/assets/ui/icons2.png)",
+      "Bash(cp \"D:/web-learning/范例/dungeon-gunner/Free_Medieval_Fantasy_UI_Pack/Assets/mainmenü.png\" D:/web-learning/范例/dungeon-gunner/assets/ui/menu_icons.png)"
     ]
   }
 }

@@ -10,6 +10,10 @@ export function randomUpgrades(count, player) {
       const cur = Number(stats[u.levelStat] ?? 0);
       if (cur >= u.maxLevel) return false;
     }
+    if (u.prerequisites?.length) {
+      const met = u.prerequisites.every(pre => (stats[pre.stat] ?? 0) >= pre.min);
+      if (!met) return false;
+    }
     if (u.requires && !u.requires(player)) return false;
     return true;
   });
