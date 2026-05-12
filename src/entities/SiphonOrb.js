@@ -24,10 +24,12 @@ export class SiphonOrb extends Phaser.Physics.Arcade.Sprite {
     if (!this.active) return;
     const p = this.scene.player;
     if (!p || p.dead) return;
+    const magnetBuff = p.buffs.get('magnet_aura');
+    const radius = magnetBuff ? magnetBuff.params.radius : XP.pickupRadius;
     const d = Phaser.Math.Distance.Between(this.x, this.y, p.x, p.y);
-    if (d < XP.pickupRadius) {
+    if (d < radius) {
       const a = Math.atan2(p.y - this.y, p.x - this.x);
-      const s = XP.magnetSpeed * (1 + (1 - d / XP.pickupRadius));
+      const s = XP.magnetSpeed * (1 + (1 - d / radius));
       this.setVelocity(Math.cos(a) * s, Math.sin(a) * s);
     }
   }

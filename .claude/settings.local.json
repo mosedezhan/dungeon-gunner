@@ -66,7 +66,11 @@
       "Bash(python -c ' *)",
       "Bash(cp D:/web-learning/范例/dungeon-gunner/Free_Medieval_Fantasy_UI_Pack/Assets/icons.png D:/web-learning/范例/dungeon-gunner/assets/ui/icons.png)",
       "Bash(cp D:/web-learning/范例/dungeon-gunner/Free_Medieval_Fantasy_UI_Pack/Assets/icons2.png D:/web-learning/范例/dungeon-gunner/assets/ui/icons2.png)",
-      "Bash(cp \"D:/web-learning/范例/dungeon-gunner/Free_Medieval_Fantasy_UI_Pack/Assets/mainmenü.png\" D:/web-learning/范例/dungeon-gunner/assets/ui/menu_icons.png)"
+      "Bash(cp \"D:/web-learning/范例/dungeon-gunner/Free_Medieval_Fantasy_UI_Pack/Assets/mainmenü.png\" D:/web-learning/范例/dungeon-gunner/assets/ui/menu_icons.png)",
+      "Bash(python -c \"from PIL import Image; img=Image.open\\('items and trap_animation/chest/chest_1.png'\\); print\\(f'chest: {img.size}'\\)\")",
+      "Bash(python3 -c \"from PIL import Image; img=Image.open\\('items and trap_animation/chest/chest_1.png'\\); print\\(f'chest: {img.size}'\\)\")",
+      "Bash(python -c \"from PIL import Image; img=Image.open\\('items and trap_animation/flasks/flasks_1_1.png'\\); print\\(f'flask: {img.size}'\\)\")",
+      "Bash(python3 -c \"from PIL import Image; img=Image.open\\('items and trap_animation/flasks/flasks_1_1.png'\\); print\\(f'flask: {img.size}'\\)\")"
     ]
   }
 }

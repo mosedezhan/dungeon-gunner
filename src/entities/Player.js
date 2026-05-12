@@ -38,6 +38,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.dead = false;
     this.skillCharges = 0;
     this.timeStopReadyAt = 0;
+    this.buffs = new Map();
 
     this.isRolling = false;
     this.lastRollAt = -Infinity;
@@ -161,6 +162,18 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.regenAccum -= heal;
       }
     }
+
+    // Buff expiry
+    const now = this.scene.time.now;
+    for (const [type, buff] of this.buffs) {
+      if (now >= buff.expiresAt) this.removeBuff(type);
+    }
+
+    // Magnet aura follows player
+    if (this._magnetAura) {
+      this._magnetAura.x = this.x;
+      this._magnetAura.y = this.y;
+    }
   }
 
   tryAttack(time) {
@@ -262,6 +275,68 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     const before = this.skillCharges;
     this.skillCharges = Math.min(this.stats.skillChargesMax, this.skillCharges + n);
     return this.skillCharges > before;
+  }
+
+  heal(amount) {
+    this.hp = Math.min(this.stats.maxHp, this.hp + amount);
+  }
+
+  addBuff(type, durationMs, params = {}) {
+    const now = this.scene.time.now;
+    if (this.buffs.has(type)) {
+      this.buffs.get(type).expiresAt = now + durationMs;
+      return;
+    }
+    const entry = { expiresAt: now + durationMs, params };
+    if (type === 'damage_boost') {
+      entry.originalValue = this.stats.damage;
+      this.stats.damage = Math.round(this.stats.damage * params.mult);
+    } else if (type === 'speed_boost') {
+      entry.originalValue = this.stats.moveSpeed;
+      this.stats.moveSpeed = Math.round(this.stats.moveSpeed * params.mult);
+    }
+    this.buffs.set(type, entry);
+    this._applyBuffVisual(type, true);
+  }
+
+  removeBuff(type) {
+    const buff = this.buffs.get(type);
+    if (!buff) return;
+    if (type === 'damage_boost') this.stats.damage = buff.originalValue;
+    else if (type === 'speed_boost') this.stats.moveSpeed = buff.originalValue;
+    this._applyBuffVisual(type, false);
+    this.buffs.delete(type);
+  }
+
+  _applyBuffVisual(type, active) {
+    if (type === 'damage_boost') {
+      if (active) this.setTint(0xff4444);
+      else this.clearTint();
+    } else if (type === 'speed_boost') {
+      if (active) {
+        this._speedDustTimer = this.scene.time.addEvent({
+          delay: 80, loop: true,
+          callback: () => {
+            if (!this.active || this.dead) return;
+            const d = this.scene.add.image(this.x, this.y + 8, 'slam_dust')
+              .setScale(0.3).setAlpha(0.5).setDepth(8);
+            this.scene.tweens.add({ targets: d, alpha: 0, duration: 200, onComplete: () => d.destroy() });
+          },
+        });
+      } else if (this._speedDustTimer) {
+        this._speedDustTimer.remove();
+        this._speedDustTimer = null;
+      }
+    } else if (type === 'magnet_aura') {
+      if (active) {
+        this._magnetAura = this.scene.add.image(this.x, this.y, 'shockwave')
+          .setBlendMode(Phaser.BlendModes.ADD).setTint(0x4488ff)
+          .setAlpha(0.2).setDepth(3).setScale(5);
+      } else if (this._magnetAura) {
+        this._magnetAura.destroy();
+        this._magnetAura = null;
+      }
+    }
   }
 
   tryRoll(time) {

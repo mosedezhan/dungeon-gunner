@@ -1,10 +1,12 @@
-import { GAME, SKILL, WORLD, CLASSES, WARRIOR, BULLET_TIME, TIME_STOP, ARCANE_STORM, FROST } from '../config.js';
+import { GAME, SKILL, WORLD, CLASSES, WARRIOR, BULLET_TIME, TIME_STOP, ARCANE_STORM, FROST, DROPS, XP, ENEMY } from '../config.js';
 import { Player } from '../entities/Player.js';
 import { Bullet } from '../entities/Bullet.js';
 import { EnemyBullet } from '../entities/EnemyBullet.js';
 import { XPOrb } from '../entities/XPOrb.js';
 import { SkillOrb } from '../entities/SkillOrb.js';
 import { SiphonOrb } from '../entities/SiphonOrb.js';
+import { HealthPotion } from '../entities/HealthPotion.js';
+import { Chest } from '../entities/Chest.js';
 import { WaveManager } from '../systems/WaveManager.js';
 import { World } from '../systems/World.js';
 import { Mimic } from '../entities/enemies/Mimic.js';
@@ -25,6 +27,8 @@ export class GameScene extends Phaser.Scene {
     this.xpOrbs       = this.physics.add.group({ classType: XPOrb,       runChildUpdate: true, maxSize: 400 });
     this.skillOrbs    = this.physics.add.group({ classType: SkillOrb,    runChildUpdate: true, maxSize: 100 });
     this.siphonOrbs   = this.physics.add.group({ classType: SiphonOrb,   runChildUpdate: true, maxSize: 200 });
+    this.healthPotions = this.physics.add.group({ classType: HealthPotion, runChildUpdate: true, maxSize: 50 });
+    this.chests       = this.physics.add.group({ classType: Chest,       runChildUpdate: true, maxSize: 20 });
     this.enemies      = this.physics.add.group();
 
     this.physics.add.overlap(this.bullets, this.enemies, this.onBulletHitEnemy, null, this);
@@ -33,6 +37,7 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.overlap(this.player, this.xpOrbs, this.onPickupXP, null, this);
     this.physics.add.overlap(this.player, this.skillOrbs, this.onPickupSkillOrb, null, this);
     this.physics.add.overlap(this.player, this.siphonOrbs, this.onPickupXP, null, this);
+    this.physics.add.overlap(this.player, this.healthPotions, this.onPickupHealthPotion, null, this);
 
     this.kills = 0;
     this.slowFactor = 1;
@@ -52,6 +57,11 @@ export class GameScene extends Phaser.Scene {
       this.player.triggerSkill();
     });
     this.input.keyboard.on('keydown-F1', (e) => { e.preventDefault(); this.openDebug(); });
+    this.input.keyboard.on('keydown-E', () => {
+      if (!this.scene.isActive() || this.player.dead) return;
+      const chest = this._getNearbyChest();
+      if (chest) chest.open();
+    });
 
     this.input.mouse.disableContextMenu();
     this.input.on('pointerdown', (pointer) => {
@@ -170,6 +180,75 @@ export class GameScene extends Phaser.Scene {
     player.gainSkillCharge(1);
   }
 
+  onPickupHealthPotion(player, potion) {
+    if (!potion.active || player.dead) return;
+    potion.kill();
+    const healAmount = Math.round(player.stats.maxHp * DROPS.healthPotion.healPercent);
+    player.heal(healAmount);
+  }
+
+  _getNearbyChest() {
+    const p = this.player;
+    let best = null, bestDist = DROPS.chest.interactRadius;
+    this.chests.getChildren().forEach(c => {
+      if (!c.active || c.state !== 0) return;
+      const d = Phaser.Math.Distance.Between(p.x, p.y, c.x, c.y);
+      if (d < bestDist) { bestDist = d; best = c; }
+    });
+    return best;
+  }
+
+  onChestOpen(chest) {
+    const rewards = DROPS.chest.rewards;
+    const count = DROPS.chest.rewardCount;
+    const pool = [];
+    const picked = [];
+    rewards.forEach((r, i) => pool.push(i));
+    for (let n = 0; n < count && pool.length > 0; n++) {
+      const totalW = pool.reduce((s, i) => s + rewards[i].weight, 0);
+      let roll = Math.random() * totalW;
+      let pick = pool[0];
+      for (const i of pool) {
+        roll -= rewards[i].weight;
+        if (roll <= 0) { pick = i; break; }
+      }
+      picked.push(rewards[pick]);
+      pool.splice(pool.indexOf(pick), 1);
+    }
+    for (const r of picked) this._grantReward(r, chest);
+  }
+
+  _grantReward(r, chest) {
+    const p = this.player;
+    switch (r.type) {
+      case 'xp_burst': {
+        const cnt = Phaser.Math.Between(r.count[0], r.count[1]);
+        for (let i = 0; i < cnt; i++) {
+          const ox = chest.x + Phaser.Math.Between(-30, 30);
+          const oy = chest.y + Phaser.Math.Between(-30, 30);
+          const orb = this.xpOrbs.get(ox, oy);
+          if (orb) orb.spawn(ox, oy, Math.round((p.level ?? 1) * r.xpMult));
+        }
+        break;
+      }
+      case 'skill_charge':
+        p.gainSkillCharge(r.count);
+        break;
+      case 'heal':
+        p.heal(Math.round(p.stats.maxHp * r.healPct));
+        break;
+      case 'damage_boost':
+        p.addBuff('damage_boost', r.durMs, { mult: r.mult });
+        break;
+      case 'speed_boost':
+        p.addBuff('speed_boost', r.durMs, { mult: r.mult });
+        break;
+      case 'magnet_aura':
+        p.addBuff('magnet_aura', r.durMs, { radius: r.radius });
+        break;
+    }
+  }
+
   handleEnemyDeath(enemy) {
     this.kills += 1;
     const orb = this.xpOrbs.get(enemy.x, enemy.y);
@@ -177,6 +256,20 @@ export class GameScene extends Phaser.Scene {
     if (Math.random() < SKILL.dropChance) {
       const so = this.skillOrbs.get(enemy.x, enemy.y);
       if (so) so.spawn(enemy.x, enemy.y);
+    }
+
+    // HealthPotion drop
+    const hpChance = this._dropChance('healthPotion', enemy);
+    if (Math.random() < hpChance) {
+      const hp = this.healthPotions.get(enemy.x, enemy.y);
+      if (hp) hp.spawn(enemy.x, enemy.y);
+    }
+
+    // Chest drop
+    const chestChance = this._dropChance('chest', enemy);
+    if (Math.random() < chestChance) {
+      const ch = this.chests.get(enemy.x, enemy.y);
+      if (ch) ch.spawn(enemy.x, enemy.y);
     }
 
     if (enemy instanceof Mimic) {
@@ -193,6 +286,22 @@ export class GameScene extends Phaser.Scene {
         });
       }
     }
+  }
+
+  _dropChance(dropType, enemy) {
+    const table = DROPS[dropType].dropTable;
+    const enemyType = this._getEnemyDropKey(enemy);
+    return table[enemyType] ?? table.default ?? 0;
+  }
+
+  _getEnemyDropKey(enemy) {
+    const cfg = enemy.cfg;
+    if (!cfg) return 'default';
+    if (cfg === ENEMY.elite_chaser || cfg === ENEMY.elite_shooter || cfg === ENEMY.elite_giant) return 'elite';
+    if (cfg === ENEMY.giant) return 'giant';
+    if (cfg === ENEMY.bomber) return 'bomber';
+    if (cfg === ENEMY.mimic) return 'mimic';
+    return 'default';
   }
 
   useSkill(player) {

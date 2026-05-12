@@ -346,6 +346,17 @@ export class BootScene extends Phaser.Scene {
       frameWidth: 128, frameHeight: 128,
     });
 
+    // Drop spritesheets
+    this.load.spritesheet('chest', 'assets/chest.png', {
+      frameWidth: 16, frameHeight: 16,
+    });
+    this.load.spritesheet('chest_open', 'assets/chest_open.png', {
+      frameWidth: 16, frameHeight: 16,
+    });
+    this.load.spritesheet('flask_red', 'assets/flask_red.png', {
+      frameWidth: 16, frameHeight: 16,
+    });
+
     // UI spritesheets
     this.load.spritesheet('ui_icons', 'assets/ui/icons.png', {
       frameWidth: 32, frameHeight: 32,
@@ -718,6 +729,23 @@ export class BootScene extends Phaser.Scene {
       key: 'mimic_flee',
       frames: [{ key: 'mimic_revealed_a' }, { key: 'mimic_revealed_b' }],
       frameRate: 10, repeat: -1,
+    });
+
+    // Drop animations
+    this.anims.create({
+      key: 'chest_idle',
+      frames: this.anims.generateFrameNumbers('chest', { start: 0, end: 3 }),
+      frameRate: 4, repeat: -1,
+    });
+    this.anims.create({
+      key: 'chest_open_anim',
+      frames: this.anims.generateFrameNumbers('chest_open', { start: 0, end: 3 }),
+      frameRate: 10, repeat: 0,
+    });
+    this.anims.create({
+      key: 'flask_red_idle',
+      frames: this.anims.generateFrameNumbers('flask_red', { start: 0, end: 3 }),
+      frameRate: 6, repeat: -1,
     });
 
     const params = new URLSearchParams(window.location.search);

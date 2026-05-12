@@ -1,22 +1,21 @@
-import { XP } from '../config.js';
+import { DROPS } from '../config.js';
 
-export class XPOrb extends Phaser.Physics.Arcade.Sprite {
+export class HealthPotion extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y) {
-    super(scene, x, y, 'xp');
-    this.value = 1;
+    super(scene, x, y, 'flask_red');
   }
 
-  spawn(x, y, value) {
+  spawn(x, y) {
     this.enableBody(true, x, y, true, true);
-    this.value = value;
-    this.body.setCircle(5, 0, 0);
+    this.body.setCircle(5, 3, 3);
     this.setDepth(4);
     this.setScale(1);
+    this.play('flask_red_idle');
     this.pulseTween = this.scene.tweens.add({
       targets: this, scale: 1.2, duration: 500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
     });
     this.setVelocity(Phaser.Math.Between(-60, 60), Phaser.Math.Between(-60, 60));
-    this.scene.time.delayedCall(300, () => { if (this.active) this.setVelocity(0, 0); });
+    this.scene.time.delayedCall(250, () => { if (this.active) this.setVelocity(0, 0); });
   }
 
   preUpdate(time, delta) {
@@ -25,11 +24,11 @@ export class XPOrb extends Phaser.Physics.Arcade.Sprite {
     const p = this.scene.player;
     if (!p || p.dead) return;
     const magnetBuff = p.buffs.get('magnet_aura');
-    const radius = magnetBuff ? magnetBuff.params.radius : XP.pickupRadius;
+    const radius = magnetBuff ? magnetBuff.params.radius : DROPS.healthPotion.pickupRadius;
     const d = Phaser.Math.Distance.Between(this.x, this.y, p.x, p.y);
     if (d < radius) {
       const a = Math.atan2(p.y - this.y, p.x - this.x);
-      const s = XP.magnetSpeed * (1 + (1 - d / radius));
+      const s = DROPS.healthPotion.magnetSpeed * (1 + (1 - d / radius));
       this.setVelocity(Math.cos(a) * s, Math.sin(a) * s);
     }
   }

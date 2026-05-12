@@ -7,6 +7,8 @@ import { Mimic } from '../entities/enemies/Mimic.js';
 import { EliteChaser } from '../entities/enemies/EliteChaser.js';
 import { EliteShooter } from '../entities/enemies/EliteShooter.js';
 import { EliteGiant } from '../entities/enemies/EliteGiant.js';
+import { HealthPotion } from '../entities/HealthPotion.js';
+import { Chest } from '../entities/Chest.js';
 
 export const DEBUG_SPAWNABLE = {
   '1: 追击者': Chaser,
@@ -18,4 +20,9 @@ export const DEBUG_SPAWNABLE = {
   '7: 精英追击者': EliteChaser,
   '8: 精英射手': EliteShooter,
   '9: 精英巨人': EliteGiant,
+};
+
+export const DEBUG_DROPABLE = {
+  '血瓶': HealthPotion,
+  '宝箱': Chest,
 };

@@ -98,6 +98,41 @@ export const SKILL = {
   vfxDurationMs: 500,
 };
 
+export const DROPS = {
+  healthPotion: {
+    pickupRadius: 110,
+    magnetSpeed: 320,
+    healPercent: 0.20,
+    dropTable: {
+      default: 0.8,
+      elite: 0.25,
+      giant: 0.15,
+      bomber: 0.03,
+      mimic: 0.0,
+    },
+  },
+  chest: {
+    interactRadius: 60,
+    openAnimDurationMs: 400,
+    rewardCount: 2,
+    dropTable: {
+      default: 0.02,
+      elite: 0.20,
+      giant: 0.30,
+      bomber: 0.0,
+      mimic: 0.0,
+    },
+    rewards: [
+      { type: 'xp_burst', weight: 25, count: [5, 8], xpMult: 3 },
+      { type: 'skill_charge', weight: 15, count: 2 },
+      { type: 'heal', weight: 15, healPct: 0.30 },
+      { type: 'damage_boost', weight: 15, mult: 1.5, durMs: 10000 },
+      { type: 'speed_boost', weight: 15, mult: 1.3, durMs: 10000 },
+      { type: 'magnet_aura', weight: 15, radius: 300, durMs: 15000 },
+    ],
+  },
+};
+
 export const WAVE = {
   durationMs: 20000,
   startSpawnMs: 1200,

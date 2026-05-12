@@ -23,10 +23,12 @@ export class SkillOrb extends Phaser.Physics.Arcade.Sprite {
     if (!this.active) return;
     const p = this.scene.player;
     if (!p || p.dead) return;
+    const magnetBuff = p.buffs.get('magnet_aura');
+    const radius = magnetBuff ? magnetBuff.params.radius : SKILL.pickupRadius;
     const d = Phaser.Math.Distance.Between(this.x, this.y, p.x, p.y);
-    if (d < SKILL.pickupRadius) {
+    if (d < radius) {
       const a = Math.atan2(p.y - this.y, p.x - this.x);
-      const s = SKILL.magnetSpeed * (1 + (1 - d / SKILL.pickupRadius));
+      const s = SKILL.magnetSpeed * (1 + (1 - d / radius));
       this.setVelocity(Math.cos(a) * s, Math.sin(a) * s);
     }
   }

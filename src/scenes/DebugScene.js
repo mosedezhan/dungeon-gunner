@@ -1,4 +1,4 @@
-import { DEBUG_SPAWNABLE } from '../debug/registry.js';
+import { DEBUG_SPAWNABLE, DEBUG_DROPABLE } from '../debug/registry.js';
 
 const STYLE = {
   font: '16px monospace',
@@ -51,6 +51,16 @@ export class DebugScene extends Phaser.Scene {
     }
 
     y += 15;
+    this.add.text(panelX, y, '── 在光标处生成掉落物 ──', STYLE_SECTION)
+      .setOrigin(0.5).setScrollFactor(0).setDepth(1);
+    y += 30;
+
+    for (const [label, cls] of Object.entries(DEBUG_DROPABLE)) {
+      this._addButton(panelX, y, label, () => this._spawnDrop(cls));
+      y += 28;
+    }
+
+    y += 15;
     this.add.text(panelX, y, '── 操作 ──', STYLE_SECTION)
       .setOrigin(0.5).setScrollFactor(0).setDepth(1);
     y += 30;
@@ -58,7 +68,7 @@ export class DebugScene extends Phaser.Scene {
     this._godText = this._addButton(panelX, y, '[W] 上帝模式: 关闭', () => this._toggleGod());
     y += 28;
 
-    this._addButton(panelX, y, '[E] 消灭所有敌人', () => this._killAll());
+    this._addButton(panelX, y, '[X] 消灭所有敌人', () => this._killAll());
     y += 28;
 
     this._addButton(panelX, y, '[Q] +1 技能充能', () => this._addCharge());
@@ -86,7 +96,7 @@ export class DebugScene extends Phaser.Scene {
     this.input.keyboard.on('keydown-EIGHT', () => this._spawnByIndex(7));
     this.input.keyboard.on('keydown-NINE',  () => this._spawnByIndex(8));
     this.input.keyboard.on('keydown-W',     () => this._toggleGod());
-    this.input.keyboard.on('keydown-E',     () => this._killAll());
+    this.input.keyboard.on('keydown-X',     () => this._killAll());
     this.input.keyboard.on('keydown-Q',     () => this._addCharge());
     this.input.keyboard.on('keydown-R',     () => this._skipWave());
     this.input.keyboard.on('keydown-T',     () => this._toggleSpawn());
@@ -114,6 +124,15 @@ export class DebugScene extends Phaser.Scene {
     const hpMult = 1 + (gs.waveManager.wave - 1) * 0.15;
     enemy.maxHp = Math.round(enemy.maxHp * hpMult);
     enemy.hp = enemy.maxHp;
+  }
+
+  _spawnDrop(cls) {
+    const gs = this.gs;
+    const pointer = this.input.activePointer;
+    const world = pointer.positionToCamera(gs.cameras.main);
+    const group = cls.name === 'HealthPotion' ? gs.healthPotions : gs.chests;
+    const item = group.get(world.x, world.y);
+    if (item) item.spawn(world.x, world.y);
   }
 
   _spawnByIndex(idx) {
